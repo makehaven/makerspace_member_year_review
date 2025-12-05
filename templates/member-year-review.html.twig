@@ -1,0 +1,134 @@
+{#
+/**
+ * @file
+ * Template for Member Year in Review.
+ */
+#}
+
+<div class="year-in-review container my-5">
+  <div class="yir-header text-center mb-5">
+    <h1 class="display-4">{{ year }} in Review</h1>
+    <p class="lead">Celebrating your making journey, {{ user_name }}!</p>
+    
+    {% if profile.goals %}
+      <div class="goals-container mt-3">
+        {% for goal in profile.goals %}
+          {% set icon_class = 'fa-star' %}
+          {% if goal.key == 'artist' %}{% set icon_class = 'fa-paint-brush' %}
+          {% elseif goal.key == 'skill_builder' %}{% set icon_class = 'fa-tools' %}
+          {% elseif goal.key == 'hobbyist' %}{% set icon_class = 'fa-heart' %}
+          {% elseif goal.key == 'inventor' %}{% set icon_class = 'fa-lightbulb' %}
+          {% elseif goal.key == 'entrepreneur' %}{% set icon_class = 'fa-briefcase' %}
+          {% elseif goal.key == 'seller' %}{% set icon_class = 'fa-store' %}
+          {% elseif goal.key == 'networker' %}{% set icon_class = 'fa-users' %}
+          {% endif %}
+          
+          <div class="badge bg-light text-dark border p-2 m-1 d-inline-block">
+             <i class="fa {{ icon_class }} me-1 text-primary"></i> {{ goal.label }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="profile-stats mt-4 text-muted">
+       <span>Member since {{ profile.join_year }}</span> &bull;
+       <span>{{ profile.tenure_label }}</span> &bull;
+       <span>Rank #{{ profile.seniority_rank }} of {{ profile.total_members }}</span>
+    </div>
+  </div>
+
+  <div class="yir-grid row text-center">
+    
+    <div class="col-md-3 mb-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <h2 class="card-title display-5 text-primary">{{ stats.visits }}</h2>
+          <p class="card-text text-uppercase fw-bold text-secondary">Days Visited</p>
+          {% if profile.tenure_years >= 1 %}
+          <small class="text-{{ deltas.visits starts with '+' ? 'success' : 'muted' }}">
+             {{ deltas.visits }} vs last year
+          </small>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <h2 class="card-title display-5 text-success">{{ stats.events_count }}</h2>
+          <p class="card-text text-uppercase fw-bold text-secondary">Events</p>
+          {% if profile.tenure_years >= 1 %}
+          <small class="text-{{ deltas.events starts with '+' ? 'success' : 'muted' }}">
+             {{ deltas.events }} vs last year
+          </small>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <h2 class="card-title display-5 text-warning">{{ stats.badges_count }}</h2>
+          <p class="card-text text-uppercase fw-bold text-secondary">Badges</p>
+           {% if profile.tenure_years >= 1 %}
+          <small class="text-{{ deltas.badges starts with '+' ? 'success' : 'muted' }}">
+             {{ deltas.badges }} vs last year
+          </small>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <h2 class="card-title display-5 text-info">{{ stats.loans_count }}</h2>
+          <p class="card-text text-uppercase fw-bold text-secondary">Tools Borrowed</p>
+           {% if profile.tenure_years >= 1 %}
+          <small class="text-{{ deltas.loans starts with '+' ? 'success' : 'muted' }}">
+             {{ deltas.loans }} vs last year
+          </small>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="row mt-5">
+    <div class="col-md-6">
+      <div class="card h-100 stats-list">
+        <div class="card-header bg-light fw-bold">Badges Earned in {{ year }}</div>
+        <ul class="list-group list-group-flush">
+          {% for badge in stats.badges_list %}
+            <li class="list-group-item">{{ badge }}</li>
+          {% else %}
+            <li class="list-group-item text-muted fst-italic">No badges earned this year.</li>
+          {% endfor %}
+        </ul>
+         <div class="card-body">
+            <a href="/badges" class="btn btn-outline-primary btn-sm w-100">Earn more badges</a>
+         </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card h-100 stats-list">
+        <div class="card-header bg-light fw-bold">Events Attended in {{ year }}</div>
+        <ul class="list-group list-group-flush">
+          {% for event in stats.events_list %}
+            <li class="list-group-item">{{ event }}</li>
+          {% else %}
+            <li class="list-group-item text-muted fst-italic">No events attended this year.</li>
+          {% endfor %}
+        </ul>
+        <div class="card-body">
+            <a href="/events" class="btn btn-outline-primary btn-sm w-100">Find upcoming events</a>
+         </div>
+      </div>
+    </div>
+  </div>
+
+</div>

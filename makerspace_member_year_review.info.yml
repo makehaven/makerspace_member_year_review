@@ -1,0 +1,10 @@
+name: 'Makerspace Member Year in Review'
+type: module
+description: 'Provides a personalized Year in Review dashboard for members.'
+package: 'Makerspace'
+core_version_requirement: ^9 || ^10
+dependencies:
+  - drupal:user
+  - drupal:system
+  - makerspace_dashboard:makerspace_dashboard
+  - lending_library:lending_library

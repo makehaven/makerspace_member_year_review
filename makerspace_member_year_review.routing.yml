@@ -1,0 +1,8 @@
+makerspace_member_year_review.page:
+  path: '/user/{user}/year-in-review'
+  defaults:
+    _controller: '\Drupal\makerspace_member_year_review\Controller\MemberYearReviewController::page'
+    _title: 'Your Year in Review'
+  requirements:
+    _custom_access: '\Drupal\makerspace_member_year_review\Controller\MemberYearReviewController::access'
+    user: \d+

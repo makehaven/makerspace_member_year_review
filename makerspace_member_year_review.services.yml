@@ -1,0 +1,4 @@
+services:
+  makerspace_member_year_review.stats:
+    class: Drupal\makerspace_member_year_review\Service\MemberStatsService
+    arguments: ['@entity_type.manager', '@database']
