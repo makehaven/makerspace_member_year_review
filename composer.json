@@ -1,0 +1,6 @@
+{
+    "name": "makehaven/makerspace_member_year_review",
+    "type": "drupal-custom-module",
+    "description": "Generates each member's personalized Makerspace Year in Review dashboard.",
+    "license": "GPL-2.0-or-later"
+}
