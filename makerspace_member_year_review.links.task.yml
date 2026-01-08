@@ -1,0 +1,5 @@
+makerspace_member_year_review.user_tab:
+  route_name: makerspace_member_year_review.page
+  base_route: entity.user.canonical
+  title: 'Year in Review'
+  weight: 10

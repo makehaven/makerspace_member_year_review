@@ -8,10 +8,17 @@ function makerspace_member_year_review_theme($existing, $type, $theme, $path) {
     'member_year_review' => [
       'variables' => [
         'user_name' => NULL,
+        'first_name' => NULL,
+        'user_id' => NULL,
         'year' => NULL,
         'stats' => [],
         'profile' => [],
         'deltas' => [],
+        'ranks' => [],
+        'active_members_total' => NULL,
+        'community_stats' => [],
+        'community_full_report' => [],
+        'fun_award' => NULL,
       ],
     ],
   ];

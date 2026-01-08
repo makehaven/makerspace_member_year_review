@@ -4,6 +4,7 @@ namespace Drupal\makerspace_member_year_review\Service;
 
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\makerspace_dashboard\Service\UtilizationDataService;
 
 /**
  * Service to retrieve member statistics for year in review.
@@ -39,16 +40,153 @@ class MemberStatsService {
   ];
 
   /**
+   * The utilization data service.
+   *
+   * @var \Drupal\makerspace_dashboard\Service\UtilizationDataService
+   */
+  protected $utilizationData;
+
+  /**
    * Constructs a MemberStatsService object.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
    * @param \Drupal\Core\Database\Connection $database
    *   The database connection.
+   * @param \Drupal\makerspace_dashboard\Service\UtilizationDataService $utilization_data
+   *   The utilization data service.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, Connection $database) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, Connection $database, UtilizationDataService $utilization_data) {
     $this->entityTypeManager = $entity_type_manager;
     $this->database = $database;
+    $this->utilizationData = $utilization_data;
+  }
+
+  /**
+   * Gets the user's primary Maker Persona.
+   */
+  public function getMakerPersona(int $uid, int $year, int $badges_count, int $events_count, int $loans_count): ?array {
+    try {
+      $query = $this->database->select('access_control_log_field_data', 'a');
+      $query->join('access_control_log__field_access_request_user', 'u', 'a.id = u.entity_id');
+      $query->condition('u.field_access_request_user_target_id', $uid);
+      $query->where('YEAR(FROM_UNIXTIME(a.created)) = :year', [':year' => $year]);
+      
+      $query->addExpression("DATE(FROM_UNIXTIME(a.created))", 'visit_date');
+      $query->addExpression("MIN(a.created)", 'first_entry');
+      $query->groupBy('visit_date');
+      
+      $results = $query->execute();
+      
+      $time_buckets = [
+        'Early Bird' => 0,
+        'Morning Maker' => 0,
+        'Lunch Crew' => 0,
+        'Afternoon Artisan' => 0,
+        'Evening Regular' => 0,
+        'Night Owl' => 0,
+      ];
+
+      $weekend_visits = 0;
+      $total_visits = 0;
+      $tz = new \DateTimeZone('America/New_York');
+
+      foreach ($results as $row) {
+        $total_visits++;
+        $ts = (int) $row->first_entry;
+        $date = new \DateTime('@' . $ts);
+        $date->setTimezone($tz);
+        
+        $h = (int) $date->format('G');
+        $w = (int) $date->format('w'); // 0 (Sun) to 6 (Sat)
+
+        if ($w == 0 || $w == 6) $weekend_visits++;
+
+        if ($h >= 5 && $h < 9) $time_buckets['Early Bird']++;
+        elseif ($h >= 9 && $h < 12) $time_buckets['Morning Maker']++;
+        elseif ($h >= 12 && $h < 14) $time_buckets['Lunch Crew']++;
+        elseif ($h >= 14 && $h < 18) $time_buckets['Afternoon Artisan']++;
+        elseif ($h >= 18 && $h < 22) $time_buckets['Evening Regular']++;
+        else $time_buckets['Night Owl']++;
+      }
+
+      if ($total_visits === 0 && $badges_count === 0 && $events_count === 0) {
+        return NULL;
+      }
+
+      // --- Persona Logic (Priority order) ---
+      
+      // 1. Master Badger
+      if ($badges_count >= 8) {
+        return [
+          'label' => 'Master Badger',
+          'description' => 'You are in the elite tier of badge earners! Your commitment to learning new tools is inspiring.',
+          'icon' => 'fa-medal',
+          'range' => 'Achievement Unlocked',
+        ];
+      }
+
+      // 2. Workshop Enthusiast
+      if ($events_count >= 10) {
+        return [
+          'label' => 'Workshop Enthusiast',
+          'description' => 'You are a staple of our educational programs. Thank you for being such an active learner!',
+          'icon' => 'fa-chalkboard-teacher',
+          'range' => 'Community Regular',
+        ];
+      }
+
+      // 3. Weekend Warrior
+      if ($total_visits >= 5 && ($weekend_visits / $total_visits) > 0.6) {
+        return [
+          'label' => 'Weekend Warrior',
+          'description' => 'While others are resting, you are making! Saturday and Sunday are your time to shine.',
+          'icon' => 'fa-fort-awesome',
+          'range' => 'Sat & Sun Regular',
+        ];
+      }
+
+      // 4. Tool Specialist
+      if ($loans_count >= 15) {
+        return [
+          'label' => 'Tool Specialist',
+          'description' => 'You make great use of the lending library, bringing MakeHaven tools into your home projects.',
+          'icon' => 'fa-toolbox',
+          'range' => 'Expert Borrower',
+        ];
+      }
+
+      // 5. Time-of-day Fallbacks
+      arsort($time_buckets);
+      $top_time = array_key_first($time_buckets);
+      
+      $descriptions = [
+        'Early Bird' => 'You start your making before the day begins!',
+        'Morning Maker' => 'You make the most of the morning light.',
+        'Lunch Crew' => 'Taking a break to make!',
+        'Afternoon Artisan' => 'Crafting through the afternoon.',
+        'Evening Regular' => 'You\'re a staple of the evening community.',
+        'Night Owl' => 'Burning the midnight oil!',
+      ];
+      $icons = [
+        'Early Bird' => 'fa-coffee', 'Morning Maker' => 'fa-sun', 'Lunch Crew' => 'fa-utensils',
+        'Afternoon Artisan' => 'fa-tools', 'Evening Regular' => 'fa-moon', 'Night Owl' => 'fa-bed',
+      ];
+      $ranges = [
+        'Early Bird' => '5am - 9am', 'Morning Maker' => '9am - 12pm', 'Lunch Crew' => '12pm - 2pm',
+        'Afternoon Artisan' => '2pm - 6pm', 'Evening Regular' => '6pm - 10pm', 'Night Owl' => '10pm - 5am',
+      ];
+
+      return [
+        'label' => $top_time,
+        'description' => $descriptions[$top_time],
+        'icon' => $icons[$top_time],
+        'range' => $ranges[$top_time],
+      ];
+
+    } catch (\Exception $e) {
+      return NULL;
+    }
   }
 
   /**
@@ -130,9 +268,17 @@ class MemberStatsService {
       $nodes = $this->entityTypeManager->getStorage('node')->loadMultiple($nids);
       $badges = [];
       foreach ($nodes as $node) {
-        $badges[] = $node->getTitle();
+        if ($node->hasField('field_badge_requested') && !$node->get('field_badge_requested')->isEmpty()) {
+          $term = $node->get('field_badge_requested')->entity;
+          if ($term) {
+            $badges[] = $term->label();
+          }
+        } else {
+          $badges[] = $node->getTitle();
+        }
       }
-      return $badges;
+      // Ensure unique badges if requested multiple times? Probably good.
+      return array_unique($badges);
     }
     catch (\Exception $e) {
       return [];
@@ -151,6 +297,247 @@ class MemberStatsService {
       $query->accessCheck(FALSE);
       
       return (int) $query->count()->execute();
+    }
+    catch (\Exception $e) {
+      return 0;
+    }
+  }
+
+  /**
+   * Gets the rank of a user based on visit days among active members.
+   */
+  public function getVisitDaysRank(int $uid, int $year, int $user_days): int {
+    if ($user_days === 0) {
+      return 0;
+    }
+
+    try {
+      $query = $this->database->select('access_control_log_field_data', 'acl');
+      $query->addExpression('COUNT(DISTINCT DATE(FROM_UNIXTIME(acl.created)))', 'days');
+      $query->innerJoin('access_control_log__field_access_request_user', 'user_ref', 'user_ref.entity_id = acl.id');
+      $query->innerJoin('user__roles', 'ur', 'ur.entity_id = user_ref.field_access_request_user_target_id');
+      
+      $query->condition('acl.type', 'access_control_request');
+      $query->condition('ur.roles_target_id', ['member', 'current_member'], 'IN');
+      $query->where('YEAR(FROM_UNIXTIME(acl.created)) = :year', [':year' => $year]);
+      
+      $query->groupBy('user_ref.field_access_request_user_target_id');
+      $query->having('days > :user_days', [':user_days' => $user_days]);
+      
+      return (int) $query->countQuery()->execute()->fetchField() + 1;
+    }
+    catch (\Exception $e) {
+      return 0;
+    }
+  }
+
+  /**
+   * Gets the rank of a user based on badges earned among active members.
+   */
+  public function getBadgesEarnedRank(int $uid, int $year, int $user_badges): int {
+    if ($user_badges === 0) {
+      return 0;
+    }
+
+    try {
+      $start = mktime(0, 0, 0, 1, 1, $year);
+      $end = mktime(23, 59, 59, 12, 31, $year);
+
+      $query = $this->database->select('node_field_data', 'n');
+      $query->addExpression('COUNT(DISTINCT n.nid)', 'badge_count');
+      $query->innerJoin('node__field_badge_status', 'status', 'status.entity_id = n.nid');
+      $query->innerJoin('user__roles', 'ur', 'ur.entity_id = n.uid');
+      
+      $query->condition('n.type', 'badge_request');
+      $query->condition('n.status', 1);
+      $query->condition('status.field_badge_status_value', 'active');
+      $query->condition('ur.roles_target_id', ['member', 'current_member'], 'IN');
+      $query->condition('n.created', [$start, $end], 'BETWEEN');
+      
+      $query->groupBy('n.uid');
+      $query->having('badge_count > :user_badges', [':user_badges' => $user_badges]);
+      
+      return (int) $query->countQuery()->execute()->fetchField() + 1;
+    }
+    catch (\Exception $e) {
+      return 0;
+    }
+  }
+
+  /**
+   * Gets the top 5 members by badge count for the given year.
+   */
+  public function getBadgeLeaderboard(int $year, int $limit = 10): array {
+    try {
+      $start = $year . '-01-01T00:00:00';
+      $end = $year . '-12-31T23:59:59';
+
+      $query = $this->database->select('node_field_data', 'n');
+      $query->innerJoin('node__field_badge_requested', 'br', 'br.entity_id = n.nid');
+      $query->addExpression('COUNT(DISTINCT br.field_badge_requested_target_id)', 'count');
+      $query->addField('n', 'uid');
+      $query->innerJoin('node__field_badge_status', 'status', 'status.entity_id = n.nid');
+      $query->innerJoin('user__roles', 'ur', 'ur.entity_id = n.uid');
+      
+      $query->condition('n.type', 'badge_request');
+      $query->condition('n.status', 1);
+      $query->condition('status.field_badge_status_value', 'active');
+      $query->condition('ur.roles_target_id', ['member', 'current_member'], 'IN');
+      $query->condition('n.created', [strtotime($start), strtotime($end)], 'BETWEEN');
+      $query->condition('n.uid', 1, '>');
+
+      $query->groupBy('n.uid');
+      $query->orderBy('count', 'DESC');
+      $query->range(0, $limit);
+      
+      return $this->processLeaderboardResults($query->execute());
+    }
+    catch (\Exception $e) {
+      return [];
+    }
+  }
+
+  /**
+   * Gets the top 5 members by visit days for the given year.
+   */
+  public function getVisitLeaderboard(int $year, int $limit = 10): array {
+    try {
+      $query = $this->database->select('access_control_log_field_data', 'acl');
+      $query->addExpression('COUNT(DISTINCT DATE(FROM_UNIXTIME(acl.created)))', 'count');
+      $query->innerJoin('access_control_log__field_access_request_user', 'user_ref', 'user_ref.entity_id = acl.id');
+      $query->innerJoin('user__roles', 'ur', 'ur.entity_id = user_ref.field_access_request_user_target_id');
+      
+      $query->addField('user_ref', 'field_access_request_user_target_id', 'uid');
+      
+      $query->condition('acl.type', 'access_control_request');
+      $query->condition('ur.roles_target_id', ['member', 'current_member'], 'IN');
+      $query->where('YEAR(FROM_UNIXTIME(acl.created)) = :year', [':year' => $year]);
+      $query->condition('user_ref.field_access_request_user_target_id', 1, '>');
+
+      $query->groupBy('user_ref.field_access_request_user_target_id');
+      $query->orderBy('count', 'DESC');
+      $query->range(0, $limit);
+      
+      return $this->processLeaderboardResults($query->execute());
+    }
+    catch (\Exception $e) {
+      return [];
+    }
+  }
+
+  /**
+   * Gets the top members by total badges overall (all-time).
+   */
+  public function getOverallBadgeLeaderboard(int $limit = 10): array {
+    try {
+      $query = $this->database->select('node_field_data', 'n');
+      $query->innerJoin('node__field_badge_requested', 'br', 'br.entity_id = n.nid');
+      $query->addExpression('COUNT(DISTINCT br.field_badge_requested_target_id)', 'count');
+      $query->addField('n', 'uid');
+      $query->innerJoin('node__field_badge_status', 'status', 'status.entity_id = n.nid');
+      $query->innerJoin('user__roles', 'ur', 'ur.entity_id = n.uid');
+      
+      $query->condition('n.type', 'badge_request');
+      $query->condition('n.status', 1);
+      $query->condition('status.field_badge_status_value', 'active');
+      $query->condition('ur.roles_target_id', ['member', 'current_member'], 'IN');
+      $query->condition('n.uid', 1, '>');
+
+      $query->groupBy('n.uid');
+      $query->orderBy('count', 'DESC');
+      $query->range(0, $limit);
+      
+      return $this->processLeaderboardResults($query->execute());
+    }
+    catch (\Exception $e) {
+      return [];
+    }
+  }
+
+  /**
+   * Helper to process query results into a leaderboard with names and photos.
+   */
+  private function processLeaderboardResults($results): array {
+    $leaderboard = [];
+    $style = \Drupal\image\Entity\ImageStyle::load('thumbnail');
+    
+    foreach ($results as $record) {
+      /** @var \Drupal\user\UserInterface $user */
+      $user = $this->entityTypeManager->getStorage('user')->load($record->uid);
+      if (!$user) continue;
+
+      $photo_url = NULL;
+      $profiles = $this->entityTypeManager->getStorage('profile')->loadByProperties([
+        'uid' => $record->uid,
+        'type' => 'main',
+        'status' => 1,
+      ]);
+      $profile = reset($profiles);
+      if ($profile && $profile->hasField('field_member_photo') && !$profile->get('field_member_photo')->isEmpty()) {
+        $file = $profile->get('field_member_photo')->entity;
+        if ($file && $style) {
+          $photo_url = $style->buildUrl($file->getFileUri());
+        }
+      }
+
+      $leaderboard[] = [
+        'name' => $user->getDisplayName(),
+        'count' => (int) $record->count,
+        'uid' => (int) $record->uid,
+        'photo_url' => $photo_url,
+      ];
+    }
+    return $leaderboard;
+  }
+
+  /**
+   * Gets the number of appointments for a user in a given year.
+   */
+  public function getAppointments(int $uid, int $year): int {
+    try {
+      $start = $year . '-01-01T00:00:00';
+      $end = $year . '-12-31T23:59:59';
+
+      $query = $this->entityTypeManager->getStorage('node')->getQuery();
+      $query->condition('type', 'appointment');
+      $query->condition('uid', $uid);
+      $query->condition('status', 1);
+      $query->condition('field_appointment_date', [$start, $end], 'BETWEEN');
+      $query->accessCheck(FALSE);
+      
+      return (int) $query->count()->execute();
+    }
+    catch (\Exception $e) {
+      return 0;
+    }
+  }
+
+  /**
+   * Gets the rank of a user based on appointments among active members.
+   */
+  public function getAppointmentRank(int $uid, int $year, int $user_count): int {
+    if ($user_count === 0) {
+      return 0;
+    }
+
+    try {
+      $start = $year . '-01-01T00:00:00';
+      $end = $year . '-12-31T23:59:59';
+
+      $query = $this->database->select('node_field_data', 'n');
+      $query->addExpression('COUNT(DISTINCT n.nid)', 'count');
+      $query->innerJoin('node__field_appointment_date', 'd', 'd.entity_id = n.nid');
+      $query->innerJoin('user__roles', 'ur', 'ur.entity_id = n.uid');
+      
+      $query->condition('n.type', 'appointment');
+      $query->condition('n.status', 1);
+      $query->condition('ur.roles_target_id', ['member', 'current_member'], 'IN');
+      $query->condition('d.field_appointment_date_value', [$start, $end], 'BETWEEN');
+      
+      $query->groupBy('n.uid');
+      $query->having('count > :user_count', [':user_count' => $user_count]);
+      
+      return (int) $query->countQuery()->execute()->fetchField() + 1;
     }
     catch (\Exception $e) {
       return 0;
@@ -177,10 +564,12 @@ class MemberStatsService {
         return $info;
       }
 
-      // 1. Get Total Members (Always)
+      // 1. Get Total Members (Active only)
       $total_query = $this->database->select('profile', 'p');
       $total_query->condition('p.type', 'main');
       $total_query->condition('p.status', 1);
+      $total_query->join('user__roles', 'ur', 'ur.entity_id = p.uid');
+      $total_query->condition('ur.roles_target_id', ['member', 'current_member'], 'IN');
       $info['total_members'] = (int) $total_query->countQuery()->execute()->fetchField();
 
 
@@ -201,6 +590,15 @@ class MemberStatsService {
                'key' => $key,
                'label' => $label,
              ];
+          }
+        }
+
+        // Areas of Interest
+        if ($profile->hasField('field_member_areas_interest') && !$profile->get('field_member_areas_interest')->isEmpty()) {
+          foreach ($profile->get('field_member_areas_interest') as $item) {
+            if ($term = $item->entity) {
+              $info['areas_of_interest'][] = $term->label();
+            }
           }
         }
         
@@ -239,6 +637,10 @@ class MemberStatsService {
       $query->join('profile', 'p', 'p.profile_id = jd.entity_id');
       $query->condition('p.type', 'main');
       $query->condition('p.status', 1);
+      
+      // Filter by Active Members only
+      $query->join('user__roles', 'ur', 'ur.entity_id = p.uid');
+      $query->condition('ur.roles_target_id', ['member', 'current_member'], 'IN');
       
       // Add 1 because they are the Nth+1 person
       $info['seniority_rank'] = (int) $query->countQuery()->execute()->fetchField() + 1;

@@ -6,12 +6,139 @@
 #}
 
 <div class="year-in-review container my-5">
+
   <div class="yir-header text-center mb-5">
-    <h1 class="display-4">{{ year }} in Review</h1>
-    <p class="lead">Celebrating your making journey, {{ user_name }}!</p>
+    {# The page title 'Your Year in Review' is already rendered by Drupal, so we focus on the greeting #}
+    <p class="display-4 fw-bold text-primary mb-3">Celebrating your making journey, {{ first_name }}!</p>
+    <p class="lead text-muted fs-3">A look back at your impact in {{ year }}</p>
     
+    <div class="profile-stats mt-4 text-dark fs-5">
+       <span class="badge bg-light text-muted border fw-normal">Member since {{ profile.join_year }}</span>
+       <span class="mx-2">&bull;</span>
+       <span>{{ profile.tenure_label }}</span>
+       <span class="mx-2">&bull;</span>
+       <span class="fw-bold text-primary">Seniority Rank #{{ profile.seniority_rank }} of {{ active_members_total }}</span>
+    </div>
+  </div>
+
+  <div class="yir-grid row text-center justify-content-center">
+    
+    {% if stats.visits > 0 %}
+    <div class="col-md-3 mb-4">
+      <div class="card h-100 shadow-sm border-0 bg-light">
+        <div class="card-body">
+          <h2 class="card-title display-5 text-primary">{{ stats.visits }}</h2>
+          <p class="card-text text-uppercase fw-bold text-secondary">Days Visited</p>
+          {% if ranks.visits %}
+            <span class="badge {{ ranks.visits.is_top ? 'bg-primary fs-6 shadow-sm' : 'bg-secondary' }} mb-2 p-2">{{ ranks.visits.label }}</span><br>
+          {% endif %}
+          {% if ranks.visits_num %}
+            <div class="small text-muted mb-2">Rank #{{ ranks.visits_num }} of {{ active_members_total }}</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if stats.appointments > 0 %}
+    <div class="col-md-3 mb-4">
+      <div class="card h-100 shadow-sm border-0 bg-light">
+        <div class="card-body">
+          <h2 class="card-title display-5 text-info">{{ stats.appointments }}</h2>
+          <p class="card-text text-uppercase fw-bold text-secondary">Volunteer Appointments</p>
+          {% if ranks.appointments %}
+            <span class="badge {{ ranks.appointments.is_top ? 'bg-info text-dark fs-6 shadow-sm' : 'bg-secondary' }} mb-2 p-2">{{ ranks.appointments.label }}</span><br>
+          {% endif %}
+          {% if ranks.appointments_num %}
+            <div class="small text-muted mb-2">Rank #{{ ranks.appointments_num }} of {{ active_members_total }}</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if stats.events_count > 0 %}
+    <div class="col-md-3 mb-4">
+      <div class="card h-100 shadow-sm border-0 bg-light">
+        <div class="card-body">
+          <h2 class="card-title display-5 text-success">{{ stats.events_count }}</h2>
+          <p class="card-text text-uppercase fw-bold text-secondary">Events</p>
+          {% if ranks.events %}
+            <span class="badge {{ ranks.events.is_top ? 'bg-success fs-6 shadow-sm' : 'bg-secondary' }} mb-2 p-2">{{ ranks.events.label }}</span><br>
+          {% endif %}
+          {% if profile.tenure_years >= 1 %}
+          <small class="text-{{ deltas.events starts with '+' ? 'success' : 'muted' }}">
+             {{ deltas.events }} vs last year
+          </small>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if stats.badges_count > 0 %}
+    <div class="col-md-3 mb-4">
+      <div class="card h-100 shadow-sm border-0 bg-light">
+        <div class="card-body">
+          <h2 class="card-title display-5 text-warning">{{ stats.badges_count }}</h2>
+          <p class="card-text text-uppercase fw-bold text-secondary">Badges</p>
+          {% if ranks.badges %}
+            <span class="badge {{ ranks.badges.is_top ? 'bg-warning text-dark fs-6 shadow-sm' : 'bg-secondary' }} mb-2 p-2">{{ ranks.badges.label }}</span><br>
+          {% endif %}
+          {% if ranks.badges_num %}
+            <div class="small text-muted mb-2">Rank #{{ ranks.badges_num }} of {{ active_members_total }}</div>
+          {% endif %}
+           {% if profile.tenure_years >= 1 %}
+          <small class="text-{{ deltas.badges starts with '+' ? 'success' : 'muted' }}">
+             {{ deltas.badges }} vs last year
+          </small>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if stats.loans_count > 0 %}
+    <div class="col-md-3 mb-4">
+      <div class="card h-100 shadow-sm border-0 bg-light">
+        <div class="card-body">
+          <h2 class="card-title display-5 text-info">{{ stats.loans_count }}</h2>
+          <p class="card-text text-uppercase fw-bold text-secondary">Tools Borrowed</p>
+          {% if ranks.loans %}
+            <span class="badge {{ ranks.loans.is_top ? 'bg-info text-dark fs-6 shadow-sm' : 'bg-secondary' }} mb-2 p-2">{{ ranks.loans.label }}</span><br>
+          {% endif %}
+           {% if profile.tenure_years >= 1 %}
+          <small class="text-{{ deltas.loans starts with '+' ? 'success' : 'muted' }}">
+             {{ deltas.loans }} vs last year
+          </small>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+
+  {% if fun_award %}
+  <div class="row justify-content-center mt-4 mb-5">
+    <div class="col-md-6 text-center">
+      <div class="card bg-light border-primary shadow-sm">
+        <div class="card-body">
+          <h3 class="card-title h5 text-primary"><i class="fas fa-trophy text-warning me-2"></i> Your Maker Persona</h3>
+          <div class="display-1 my-3"><i class="fas {{ fun_award.icon }} text-secondary"></i></div>
+          <h4 class="display-6 fw-bold">{{ fun_award.label }}</h4>
+          <div class="badge bg-white text-dark border mb-3">{{ fun_award.range }}</div>
+          <p class="card-text text-muted fst-italic fs-5">{{ fun_award.description }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="profile-details-section text-center mb-5 p-4 bg-white rounded border shadow-sm">
     {% if profile.goals %}
-      <div class="goals-container mt-3">
+      <div class="goals-container">
+        <h3 class="h5 text-muted">Your Selected Goals for {{ year }}</h3>
         {% for goal in profile.goals %}
           {% set icon_class = 'fa-star' %}
           {% if goal.key == 'artist' %}{% set icon_class = 'fa-paint-brush' %}
@@ -24,82 +151,31 @@
           {% endif %}
           
           <div class="badge bg-light text-dark border p-2 m-1 d-inline-block">
-             <i class="fa {{ icon_class }} me-1 text-primary"></i> {{ goal.label }}
+             <i class="fas {{ icon_class }} me-1 text-primary"></i> {{ goal.label }}
           </div>
         {% endfor %}
       </div>
     {% endif %}
 
-    <div class="profile-stats mt-4 text-muted">
-       <span>Member since {{ profile.join_year }}</span> &bull;
-       <span>{{ profile.tenure_label }}</span> &bull;
-       <span>Rank #{{ profile.seniority_rank }} of {{ profile.total_members }}</span>
-    </div>
-  </div>
-
-  <div class="yir-grid row text-center">
+    {% if profile.areas_of_interest %}
+      <div class="interests-container mt-4">
+        <h4 class="h6 text-muted">Areas of Interest</h4>
+        {% for interest in profile.areas_of_interest %}
+          <span class="badge bg-white text-secondary border m-1 p-2">{{ interest }}</span>
+        {% endfor %}
+      </div>
+    {% endif %}
     
-    <div class="col-md-3 mb-4">
-      <div class="card h-100 shadow-sm">
-        <div class="card-body">
-          <h2 class="card-title display-5 text-primary">{{ stats.visits }}</h2>
-          <p class="card-text text-uppercase fw-bold text-secondary">Days Visited</p>
-          {% if profile.tenure_years >= 1 %}
-          <small class="text-{{ deltas.visits starts with '+' ? 'success' : 'muted' }}">
-             {{ deltas.visits }} vs last year
-          </small>
-          {% endif %}
-        </div>
-      </div>
+    <div class="mt-4">
+      <a href="/user/member/id/{{ user_id }}/interests-goal" class="btn btn-sm btn-primary text-white">
+        <i class="fas fa-pencil-alt me-1"></i> Update Goals & Interests
+      </a>
     </div>
-
-    <div class="col-md-3 mb-4">
-      <div class="card h-100 shadow-sm">
-        <div class="card-body">
-          <h2 class="card-title display-5 text-success">{{ stats.events_count }}</h2>
-          <p class="card-text text-uppercase fw-bold text-secondary">Events</p>
-          {% if profile.tenure_years >= 1 %}
-          <small class="text-{{ deltas.events starts with '+' ? 'success' : 'muted' }}">
-             {{ deltas.events }} vs last year
-          </small>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-3 mb-4">
-      <div class="card h-100 shadow-sm">
-        <div class="card-body">
-          <h2 class="card-title display-5 text-warning">{{ stats.badges_count }}</h2>
-          <p class="card-text text-uppercase fw-bold text-secondary">Badges</p>
-           {% if profile.tenure_years >= 1 %}
-          <small class="text-{{ deltas.badges starts with '+' ? 'success' : 'muted' }}">
-             {{ deltas.badges }} vs last year
-          </small>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-3 mb-4">
-      <div class="card h-100 shadow-sm">
-        <div class="card-body">
-          <h2 class="card-title display-5 text-info">{{ stats.loans_count }}</h2>
-          <p class="card-text text-uppercase fw-bold text-secondary">Tools Borrowed</p>
-           {% if profile.tenure_years >= 1 %}
-          <small class="text-{{ deltas.loans starts with '+' ? 'success' : 'muted' }}">
-             {{ deltas.loans }} vs last year
-          </small>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-
   </div>
 
   <div class="row mt-5">
-    <div class="col-md-6">
-      <div class="card h-100 stats-list">
+    <div class="col-md-6 mb-4">
+      <div class="card h-100 stats-list shadow-sm">
         <div class="card-header bg-light fw-bold">Badges Earned in {{ year }}</div>
         <ul class="list-group list-group-flush">
           {% for badge in stats.badges_list %}
@@ -109,13 +185,13 @@
           {% endfor %}
         </ul>
          <div class="card-body">
-            <a href="/badges" class="btn btn-outline-primary btn-sm w-100">Earn more badges</a>
+            <a href="/badges" class="btn btn-primary btn-sm w-100 text-white">Earn more badges</a>
          </div>
       </div>
     </div>
 
-    <div class="col-md-6">
-      <div class="card h-100 stats-list">
+    <div class="col-md-6 mb-4">
+      <div class="card h-100 stats-list shadow-sm">
         <div class="card-header bg-light fw-bold">Events Attended in {{ year }}</div>
         <ul class="list-group list-group-flush">
           {% for event in stats.events_list %}
@@ -125,8 +201,193 @@
           {% endfor %}
         </ul>
         <div class="card-body">
-            <a href="/events" class="btn btn-outline-primary btn-sm w-100">Find upcoming events</a>
+            <a href="/events" class="btn btn-primary btn-sm w-100 text-white">Find upcoming events</a>
          </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="community-report-section mt-5 pt-5 border-top">
+    <div class="text-center mb-5">
+      <h2 class="display-5 text-primary">Community Year in Review ({{ year }})</h2>
+      <p class="lead text-muted">See what we achieved together as a makerspace.</p>
+    </div>
+
+    {# Community Stats Grid #}
+    <div class="row text-center mb-5">
+      <div class="col-md-2 col-6 mb-4">
+        <div class="h3 fw-bold text-dark">{{ community_full_report.stats.total_joins }}</div>
+        <div class="small text-uppercase text-muted">New Members</div>
+      </div>
+      <div class="col-md-2 col-6 mb-4">
+        <div class="h3 fw-bold text-dark">{{ community_full_report.stats.workshop_registrations }}</div>
+        <div class="small text-uppercase text-muted">Workshop Registrations</div>
+      </div>
+      <div class="col-md-2 col-6 mb-4">
+        <div class="h3 fw-bold text-dark">{{ community_full_report.stats.appointments }}</div>
+        <div class="small text-uppercase text-muted">Volunteer Appointments</div>
+      </div>
+      <div class="col-md-2 col-6 mb-4">
+        <div class="h3 fw-bold text-dark">{{ community_full_report.stats.tool_loans }}</div>
+        <div class="small text-uppercase text-muted">Tool Loans</div>
+      </div>
+      <div class="col-md-2 col-6 mb-4">
+        <div class="h3 fw-bold text-dark">{{ community_full_report.stats.badges_earned }}</div>
+        <div class="small text-uppercase text-muted">Badges Earned</div>
+      </div>
+      <div class="col-md-2 col-6 mb-4">
+        <div class="h3 fw-bold text-dark">{{ community_full_report.stats.total_visits }}</div>
+        <div class="small text-uppercase text-muted">Total Visits</div>
+      </div>
+    </div>
+
+    {# Leaderboards Row - MOVED HERE #}
+    <div class="row mb-5 justify-content-center g-4">
+      <div class="col-12 text-center mb-2">
+        <h3 class="h4 text-muted text-uppercase fw-bold letter-spacing-1">2025 Community Leaderboards</h3>
+      </div>
+      
+      {# Badges in 2025 #}
+      <div class="col-lg-4 col-md-6">
+        <div class="card h-100 border-0 shadow-sm leaderboard-card">
+          <div class="card-header bg-warning text-dark fw-bold text-center border-0">
+            <i class="fas fa-award me-2"></i>Most Badges ({{ year }})
+          </div>
+          <ul class="list-group list-group-flush">
+            {% for member in community_full_report.leaderboards.badges_year %}
+              <li class="list-group-item d-flex justify-content-between align-items-center {{ member.uid == user_id ? 'bg-warning-subtle fw-bold border-start border-warning border-4' : '' }}">
+                <div class="d-flex align-items-center">
+                  <span class="text-muted small me-2" style="width: 30px;">#{{ loop.index }}</span>
+                  {% if member.photo_url %}
+                    <img src="{{ member.photo_url }}" class="rounded-circle me-2 border" style="width: 32px; height: 32px; object-fit: cover;" alt="" loading="lazy">
+                  {% else %}
+                    <div class="rounded-circle me-2 bg-light border d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                      <i class="fas fa-user text-muted small"></i>
+                    </div>
+                  {% endif %}
+                  <a href="/user/{{ member.uid }}" class="text-decoration-none {{ member.uid == user_id ? 'text-dark' : 'text-primary' }} text-truncate" style="max-width: 150px;">{{ member.name }}</a>
+                </div>
+                <span class="badge bg-warning text-dark rounded-pill">{{ member.count }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+
+      {# Visits in 2025 #}
+      <div class="col-lg-4 col-md-6">
+        <div class="card h-100 border-0 shadow-sm leaderboard-card">
+          <div class="card-header bg-primary text-white fw-bold text-center border-0">
+            <i class="fas fa-walking me-2"></i>Most Days Entered ({{ year }})
+          </div>
+          <ul class="list-group list-group-flush">
+            {% for member in community_full_report.leaderboards.visits_year %}
+              <li class="list-group-item d-flex justify-content-between align-items-center {{ member.uid == user_id ? 'bg-primary-subtle fw-bold border-start border-primary border-4' : '' }}">
+                <div class="d-flex align-items-center">
+                  <span class="text-muted small me-2" style="width: 30px;">#{{ loop.index }}</span>
+                  {% if member.photo_url %}
+                    <img src="{{ member.photo_url }}" class="rounded-circle me-2 border" style="width: 32px; height: 32px; object-fit: cover;" alt="" loading="lazy">
+                  {% else %}
+                    <div class="rounded-circle me-2 bg-light border d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                      <i class="fas fa-user text-muted small"></i>
+                    </div>
+                  {% endif %}
+                  <a href="/user/{{ member.uid }}" class="text-decoration-none {{ member.uid == user_id ? 'text-dark' : 'text-primary' }} text-truncate" style="max-width: 150px;">{{ member.name }}</a>
+                </div>
+                <span class="badge bg-primary rounded-pill">{{ member.count }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+
+      {# Badges All-Time #}
+      <div class="col-lg-4 col-md-6">
+        <div class="card h-100 border-0 shadow-sm leaderboard-card">
+          <div class="card-header bg-success text-white fw-bold text-center border-0">
+            <i class="fas fa-trophy me-2"></i>Total Badges (All-Time)
+          </div>
+          <ul class="list-group list-group-flush">
+            {% for member in community_full_report.leaderboards.badges_overall %}
+              <li class="list-group-item d-flex justify-content-between align-items-center {{ member.uid == user_id ? 'bg-success-subtle fw-bold border-start border-success border-4' : '' }}">
+                <div class="d-flex align-items-center">
+                  <span class="text-muted small me-2" style="width: 30px;">#{{ loop.index }}</span>
+                  {% if member.photo_url %}
+                    <img src="{{ member.photo_url }}" class="rounded-circle me-2 border" style="width: 32px; height: 32px; object-fit: cover;" alt="" loading="lazy">
+                  {% else %}
+                    <div class="rounded-circle me-2 bg-light border d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                      <i class="fas fa-user text-muted small"></i>
+                    </div>
+                  {% endif %}
+                  <a href="/user/{{ member.uid }}" class="text-decoration-none {{ member.uid == user_id ? 'text-dark' : 'text-primary' }} text-truncate" style="max-width: 150px;">{{ member.name }}</a>
+                </div>
+                <span class="badge bg-success rounded-pill">{{ member.count }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    {# Community Charts #}
+    <div class="row g-4">
+      <div class="col-12">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-header bg-white fw-bold border-0">Total Monthly Visits</div>
+          <div class="card-body" style="min-height: 600px;">
+            {{ community_full_report.charts.monthly_visits }}
+          </div>
+        </div>
+      </div>
+      <div class="col-12">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-header bg-white fw-bold border-0">Members by Badge Count</div>
+          <div class="card-body" style="min-height: 600px;">
+            {{ community_full_report.charts.badge_dist }}
+          </div>
+        </div>
+      </div>
+      <div class="col-12">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-header bg-white fw-bold border-0">Monthly Badges Issued</div>
+          <div class="card-body" style="min-height: 600px;">
+            {{ community_full_report.charts.badge_issuance }}
+          </div>
+        </div>
+      </div>
+      <div class="col-12">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-header bg-white fw-bold border-0">Community First Entry Time</div>
+          <div class="card-body" style="min-height: 600px;">
+            {{ community_full_report.charts.entry_time_stacked }}
+          </div>
+        </div>
+      </div>
+      <div class="col-12">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-header bg-white fw-bold border-0">Member Locations</div>
+          <div class="card-body">
+            {{ community_full_report.charts.heatmap }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-center mt-5 mb-5 pb-5">
+      <a href="/makerspace-dashboard/year-over-year" class="btn btn-primary btn-lg text-white">
+        <i class="fas fa-chart-line me-2"></i> View Full Community Dashboard
+      </a>
+    </div>
+  </div>
+
+  {# Survey at the very bottom #}
+  <div class="row justify-content-center mt-5">
+    <div class="col-md-8">
+      <div class="alert alert-info text-center shadow-sm p-5" role="alert">
+        <h4 class="alert-heading display-6 mb-3"><i class="fas fa-clipboard-list me-2"></i>Help us improve!</h4>
+        <p class="lead">Please take a moment to update your information and share your feedback in our annual survey.</p>
+        <hr>
+        <a href="https://makehaven.org/survey" class="btn btn-primary btn-lg px-5">Complete Annual Survey</a>
       </div>
     </div>
   </div>

@@ -6,3 +6,10 @@ makerspace_member_year_review.page:
   requirements:
     _custom_access: '\Drupal\makerspace_member_year_review\Controller\MemberYearReviewController::access'
     user: \d+
+
+makerspace_member_year_review.redirect:
+  path: '/year-in-review'
+  defaults:
+    _controller: '\Drupal\makerspace_member_year_review\Controller\MemberYearReviewController::redirectCurrentUser'
+  requirements:
+    _access: 'TRUE'
