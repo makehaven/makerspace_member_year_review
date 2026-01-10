@@ -110,7 +110,7 @@ class MemberStatsService {
         else $time_buckets['Night Owl']++;
       }
 
-      if ($total_visits === 0 && $badges_count === 0 && $events_count === 0) {
+      if ($total_visits === 0 && $badges_count === 0 && $events_count === 0 && $loans_count === 0) {
         return NULL;
       }
 
@@ -131,7 +131,7 @@ class MemberStatsService {
         return [
           'label' => 'Workshop Enthusiast',
           'description' => 'You are a staple of our educational programs. Thank you for being such an active learner!',
-          'icon' => 'fa-chalkboard-teacher',
+          'icon' => 'fa-graduation-cap',
           'range' => 'Community Regular',
         ];
       }
@@ -141,7 +141,7 @@ class MemberStatsService {
         return [
           'label' => 'Weekend Warrior',
           'description' => 'While others are resting, you are making! Saturday and Sunday are your time to shine.',
-          'icon' => 'fa-fort-awesome',
+          'icon' => 'fa-calendar-check',
           'range' => 'Sat & Sun Regular',
         ];
       }

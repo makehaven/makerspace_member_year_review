@@ -45,6 +45,18 @@ class MemberYearReviewCommands extends DrushCommands {
   public function precalculate($year = 2025) {
     $this->output()->writeln("Starting pre-calculation for $year...");
 
+    // 1. Warm Community Stats Cache (once)
+    // We access the protected method via reflection if needed, or if we made it public?
+    // Actually, let's just instantiate the controller and if getCommunityYearStats is protected we can't call it easily.
+    // BUT, calculateUserStats is public.
+    // Let's assume we can trigger community stats calculation via a dummy call or just rely on the first user triggering it if it wasn't cached.
+    // However, for a true pre-warm, we should try to call it.
+    // Since getCommunityYearStats is protected, let's just proceed with users. The first user calculation might NOT trigger it because calculateUserStats doesn't call getCommunityYearStats.
+    // Wait, page() calls both.
+    // So to warm EVERYTHING effectively, we should simulate a page build or just cache the heavy parts.
+    
+    // Let's stick to warming the specific data caches we control.
+    
     // Find all users with 'member' or 'current_member' roles
     $query = $this->entityTypeManager->getStorage('user')->getQuery();
     $query->condition('status', 1);
@@ -60,12 +72,12 @@ class MemberYearReviewCommands extends DrushCommands {
       if ($user instanceof UserInterface) {
         $cid = 'makerspace_member_year_review:user_stats:' . $uid . ':' . $year;
         
-        // We use a reflection to access the protected calculateUserStats method or just call page()?
-        // Actually, let's just use a trick to call the protected method if we can't make it public.
-        // For now, I'll make calculateUserStats public in the controller to make this easier.
-        
-        $stats = $this->controller->calculateUserStats($user, $year);
-        \Drupal::cache()->set($cid, $stats, time() + 86400, ['user:' . $uid, 'node_list:appointment', 'node_list:badge_request']);
+        // Check if already cached to avoid redundant work if re-running
+        if (!\Drupal::cache()->get($cid)) {
+             $stats = $this->controller->calculateUserStats($user, $year);
+             // Cache for 1 year
+             \Drupal::cache()->set($cid, $stats, time() + 31536000, ['user:' . $uid, 'node_list:appointment', 'node_list:badge_request']);
+        }
         
         $count++;
         if ($count % 50 == 0) {

@@ -106,8 +106,8 @@ class MemberYearReviewController extends ControllerBase {
       $cached_data = $cache->data;
     } else {
       $cached_data = $this->calculateUserStats($user, $year);
-      // Cache for 24 hours
-      \Drupal::cache()->set($cid, $cached_data, time() + 86400, ['user:' . $user->id(), 'node_list:appointment', 'node_list:badge_request']);
+      // Cache for 1 year
+      \Drupal::cache()->set($cid, $cached_data, time() + 31536000, ['user:' . $user->id(), 'node_list:appointment', 'node_list:badge_request']);
     }
 
     // Community Stats & Ranking
@@ -156,6 +156,7 @@ class MemberYearReviewController extends ControllerBase {
     $attached_libraries = [
       'makerspace_dashboard/annual_report',
       'makerspace_dashboard/location_map',
+      'bootstrap_barrio/fontawesome',
     ];
     if ($survey_form || $survey_link) {
       $attached_libraries[] = 'makerspace_member_year_review/survey_form';
@@ -181,7 +182,7 @@ class MemberYearReviewController extends ControllerBase {
       '#cache' => [
         'contexts' => ['user'],
         'tags' => ['user:' . $user->id(), 'community_year_stats:' . $year],
-        'max-age' => 3600, 
+        'max-age' => 31536000, 
       ],
       '#attached' => [
         'library' => $attached_libraries,
@@ -440,7 +441,7 @@ class MemberYearReviewController extends ControllerBase {
             '#options' => $chartOptions,
             '#raw_options' => $chartOptions,
             'xaxis' => ['#type' => 'chart_xaxis', '#labels' => $visitLabels],
-            'yaxis' => ['#type' => 'chart_yaxis', '#title' => $this->t('Visits'), '#min' => 0],
+            'yaxis' => ['#type' => 'chart_yaxis', '#title' => $this->t('Visits'), '#min' => 0, 'min' => 0],
             'visits' => ['#type' => 'chart_data', '#title' => $this->t('Total Visits (Unique/Day)'), '#data' => $visitValues, '#color' => '#10b981'],
         ];
     }
@@ -516,8 +517,8 @@ class MemberYearReviewController extends ControllerBase {
       ],
     ];
 
-    // Cache until next year? Or for 24h.
-    \Drupal::cache()->set($cid, $data, time() + 86400, ['node_list:badge_request', 'civicrm_event_list', 'profile_list']);
+    // Cache for 1 year
+    \Drupal::cache()->set($cid, $data, time() + 31536000, ['node_list:badge_request', 'civicrm_event_list', 'profile_list']);
 
     return $data;
   }
@@ -645,9 +646,10 @@ class MemberYearReviewController extends ControllerBase {
    * Access check for the page.
    */
   public function access(AccountInterface $account, UserInterface $user) {
-    return AccessResult::allowedIf(
-      ($account->id() == $user->id()) || $account->hasPermission('administer users')
-    );
+    if ($account->hasPermission('access user year in review pages') || $account->hasPermission('administer users')) {
+      return AccessResult::allowed()->cachePerPermissions();
+    }
+    return AccessResult::allowedIf($account->id() == $user->id())->cachePerUser();
   }
 
 }

@@ -3,12 +3,6 @@ services:
     class: Drupal\makerspace_member_year_review\Service\MemberStatsService
     arguments: ['@entity_type.manager', '@database', '@makerspace_dashboard.utilization_data']
 
-  makerspace_member_year_review.commands:
-    class: \Drupal\makerspace_member_year_review\Commands\MemberYearReviewCommands
-    arguments: ['@entity_type.manager', '@makerspace_member_year_review.stats_controller_helper']
-    tags:
-      - { name: drush.command }
-
   makerspace_member_year_review.stats_controller_helper:
     class: \Drupal\makerspace_member_year_review\Controller\MemberYearReviewController
     arguments:
