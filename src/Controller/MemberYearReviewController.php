@@ -418,25 +418,27 @@ class MemberYearReviewController extends ControllerBase {
     }
 
     if ($visitValues) {
+        $chartOptions = [
+          'vAxis' => [
+            'viewWindowMode' => 'explicit',
+            'viewWindow' => [
+              'min' => 0,
+            ],
+            'baseline' => 0,
+            'minValue' => 0,
+          ],
+          'series' => [
+            ['color' => '#10b981'],
+          ],
+        ];
+
         $charts['monthly_visits'] = [
             '#type' => 'chart',
             '#chart_type' => 'column',
             '#height' => 600,
             '#height_units' => 'px',
-            '#options' => [
-              'vAxis' => [
-                'viewWindow' => [
-                  'min' => 0,
-                ],
-              ],
-            ],
-            '#raw_options' => [
-              'vAxis' => [
-                'viewWindow' => [
-                  'min' => 0,
-                ],
-              ],
-            ],
+            '#options' => $chartOptions,
+            '#raw_options' => $chartOptions,
             'xaxis' => ['#type' => 'chart_xaxis', '#labels' => $visitLabels],
             'yaxis' => ['#type' => 'chart_yaxis', '#title' => $this->t('Visits'), '#min' => 0],
             'visits' => ['#type' => 'chart_data', '#title' => $this->t('Total Visits (Unique/Day)'), '#data' => $visitValues, '#color' => '#10b981'],
