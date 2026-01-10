@@ -190,6 +190,38 @@
       box-shadow: 0 10px 20px rgba(59, 130, 246, 0.35);
     }
   }
+  .maker-persona-icon {
+    width: clamp(88px, 12vw, 120px);
+    height: clamp(88px, 12vw, 120px);
+    margin: 0 auto 1.25rem;
+    border-radius: 28px;
+    background: radial-gradient(circle at top, rgba(96, 165, 250, 0.35), rgba(37, 99, 235, 0.15));
+    box-shadow: 0 15px 30px rgba(30, 64, 175, 0.35);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .maker-persona-icon::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 28px;
+    box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.35);
+    pointer-events: none;
+  }
+  .maker-persona-icon .persona-emoji,
+  .maker-persona-icon i,
+  .maker-persona-icon svg {
+    position: relative;
+    z-index: 1;
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+    color: #0f172a;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 </style>
 
 <div class="year-in-review container my-5">
@@ -344,7 +376,14 @@
       <div class="card bg-light border-primary shadow-sm">
         <div class="card-body">
           <h3 class="card-title h5 text-primary"><i class="fas fa-trophy text-warning me-2"></i> Your Maker Persona</h3>
-          <div class="display-1 my-3"><i class="fas {{ fun_award.icon }} text-secondary"></i></div>
+          {% set persona_icon = fun_award.icon|default('fa-star') %}
+          <div class="maker-persona-icon my-3">
+            {% if persona_icon starts with 'fa-' %}
+              <i class="fas {{ persona_icon }}"></i>
+            {% else %}
+              <span class="persona-emoji">{{ persona_icon }}</span>
+            {% endif %}
+          </div>
           <h4 class="display-6 fw-bold">{{ fun_award.label }}</h4>
           <div class="badge bg-white text-dark border mb-3">{{ fun_award.range }}</div>
           <p class="card-text text-muted fst-italic fs-5">{{ fun_award.description }}</p>
@@ -374,7 +413,7 @@
           </div>
         {% endfor %}
       {% else %}
-        <p class="text-muted mb-3">Set a few personal goals to tailor your Year in Review.</p>
+        <p class="text-muted mb-3">Set a few personal goals to guide your making journey.</p>
       {% endif %}
     </div>
 
