@@ -220,6 +220,28 @@
     </div>
   </div>
 
+  {% if survey_form or survey_link_url %}
+    <div class="member-survey-section my-5">
+      <div class="row justify-content-center">
+        <div class="col-lg-8">
+          <div class="card shadow-sm border-0 bg-light">
+            <div class="card-body p-4 p-md-5">
+              {% if survey_form %}
+                <div class="survey-form-wrapper">
+                  {{ survey_form }}
+                </div>
+              {% elseif survey_link_url %}
+                <a href="{{ survey_link_url }}" class="btn btn-primary text-white" target="_blank" rel="noopener">
+                  Open the 2026 Member Survey
+                </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
   <div class="row mt-5">
     <div class="col-md-6 mb-4">
       <div class="card h-100 stats-list shadow-sm">

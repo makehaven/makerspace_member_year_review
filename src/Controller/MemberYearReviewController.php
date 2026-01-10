@@ -133,6 +133,34 @@ class MemberYearReviewController extends ControllerBase {
       $first_name = $user->get('field_first_name')->value;
     }
 
+    $survey_form = NULL;
+    $survey_link = NULL;
+    if ($user->id() === $this->currentUser()->id()) {
+      if ($this->moduleHandler()->moduleExists('webform')) {
+        $webform = $this->entityTypeManager()->getStorage('webform')->load('2026_member_survey');
+        if ($webform) {
+          $survey_form = [
+            '#type' => 'webform',
+            '#webform' => $webform,
+            '#lazy' => TRUE,
+          ];
+        }
+        else {
+          $survey_link = '/form/2026-member-survey';
+        }
+      }
+      else {
+        $survey_link = '/form/2026-member-survey';
+      }
+    }
+    $attached_libraries = [
+      'makerspace_dashboard/annual_report',
+      'makerspace_dashboard/location_map',
+    ];
+    if ($survey_form || $survey_link) {
+      $attached_libraries[] = 'makerspace_member_year_review/survey_form';
+    }
+
     return [
       '#theme' => 'member_year_review',
       '#user_name' => $user->getDisplayName(),
@@ -148,16 +176,15 @@ class MemberYearReviewController extends ControllerBase {
       '#community_full_report' => $community_full_report,
       '#fun_award' => $cached_data['fun_award'],
       '#stats' => $cached_data['stats'],
+      '#survey_form' => $survey_form,
+      '#survey_link_url' => $survey_link,
       '#cache' => [
         'contexts' => ['user'],
         'tags' => ['user:' . $user->id(), 'community_year_stats:' . $year],
         'max-age' => 3600, 
       ],
       '#attached' => [
-        'library' => [
-          'makerspace_dashboard/annual_report',
-          'makerspace_dashboard/location_map',
-        ],
+        'library' => $attached_libraries,
         'drupalSettings' => [
           'makerspace_dashboard' => [
             'locations_url' => '/makerspace-dashboard/api/locations',
