@@ -116,10 +116,10 @@ class MemberStatsService {
 
       // --- Persona Logic (Priority order) ---
       
-      // 1. Master Badger
+      // 1. Master Badge Earner
       if ($badges_count >= 8) {
         return [
-          'label' => 'Master Badger',
+          'label' => 'Master Badge Earner',
           'description' => 'You are in the elite tier of badge earners! Your commitment to learning new tools is inspiring.',
           'icon' => 'fa-medal',
           'range' => 'Achievement Unlocked',
@@ -316,9 +316,15 @@ class MemberStatsService {
       $query->addExpression('COUNT(DISTINCT DATE(FROM_UNIXTIME(acl.created)))', 'days');
       $query->innerJoin('access_control_log__field_access_request_user', 'user_ref', 'user_ref.entity_id = acl.id');
       $query->innerJoin('user__roles', 'ur', 'ur.entity_id = user_ref.field_access_request_user_target_id');
+      $query->leftJoin('user__field_chargebee_payment_pause', 'pause', 'pause.entity_id = user_ref.field_access_request_user_target_id');
       
       $query->condition('acl.type', 'access_control_request');
-      $query->condition('ur.roles_target_id', ['member', 'current_member'], 'IN');
+      
+      $or = $query->orConditionGroup()
+        ->condition('ur.roles_target_id', ['member', 'current_member'], 'IN')
+        ->condition('pause.field_chargebee_payment_pause_value', 1);
+      $query->condition($or);
+      
       $query->where('YEAR(FROM_UNIXTIME(acl.created)) = :year', [':year' => $year]);
       
       $query->groupBy('user_ref.field_access_request_user_target_id');
@@ -347,11 +353,17 @@ class MemberStatsService {
       $query->addExpression('COUNT(DISTINCT n.nid)', 'badge_count');
       $query->innerJoin('node__field_badge_status', 'status', 'status.entity_id = n.nid');
       $query->innerJoin('user__roles', 'ur', 'ur.entity_id = n.uid');
+      $query->leftJoin('user__field_chargebee_payment_pause', 'pause', 'pause.entity_id = n.uid');
       
       $query->condition('n.type', 'badge_request');
       $query->condition('n.status', 1);
       $query->condition('status.field_badge_status_value', 'active');
-      $query->condition('ur.roles_target_id', ['member', 'current_member'], 'IN');
+      
+      $or = $query->orConditionGroup()
+        ->condition('ur.roles_target_id', ['member', 'current_member'], 'IN')
+        ->condition('pause.field_chargebee_payment_pause_value', 1);
+      $query->condition($or);
+      
       $query->condition('n.created', [$start, $end], 'BETWEEN');
       
       $query->groupBy('n.uid');
@@ -378,11 +390,17 @@ class MemberStatsService {
       $query->addField('n', 'uid');
       $query->innerJoin('node__field_badge_status', 'status', 'status.entity_id = n.nid');
       $query->innerJoin('user__roles', 'ur', 'ur.entity_id = n.uid');
+      $query->leftJoin('user__field_chargebee_payment_pause', 'pause', 'pause.entity_id = n.uid');
       
       $query->condition('n.type', 'badge_request');
       $query->condition('n.status', 1);
       $query->condition('status.field_badge_status_value', 'active');
-      $query->condition('ur.roles_target_id', ['member', 'current_member'], 'IN');
+      
+      $or = $query->orConditionGroup()
+        ->condition('ur.roles_target_id', ['member', 'current_member'], 'IN')
+        ->condition('pause.field_chargebee_payment_pause_value', 1);
+      $query->condition($or);
+      
       $query->condition('n.created', [strtotime($start), strtotime($end)], 'BETWEEN');
       $query->condition('n.uid', 1, '>');
 
@@ -406,11 +424,17 @@ class MemberStatsService {
       $query->addExpression('COUNT(DISTINCT DATE(FROM_UNIXTIME(acl.created)))', 'count');
       $query->innerJoin('access_control_log__field_access_request_user', 'user_ref', 'user_ref.entity_id = acl.id');
       $query->innerJoin('user__roles', 'ur', 'ur.entity_id = user_ref.field_access_request_user_target_id');
+      $query->leftJoin('user__field_chargebee_payment_pause', 'pause', 'pause.entity_id = user_ref.field_access_request_user_target_id');
       
       $query->addField('user_ref', 'field_access_request_user_target_id', 'uid');
       
       $query->condition('acl.type', 'access_control_request');
-      $query->condition('ur.roles_target_id', ['member', 'current_member'], 'IN');
+      
+      $or = $query->orConditionGroup()
+        ->condition('ur.roles_target_id', ['member', 'current_member'], 'IN')
+        ->condition('pause.field_chargebee_payment_pause_value', 1);
+      $query->condition($or);
+      
       $query->where('YEAR(FROM_UNIXTIME(acl.created)) = :year', [':year' => $year]);
       $query->condition('user_ref.field_access_request_user_target_id', 1, '>');
 
@@ -436,11 +460,17 @@ class MemberStatsService {
       $query->addField('n', 'uid');
       $query->innerJoin('node__field_badge_status', 'status', 'status.entity_id = n.nid');
       $query->innerJoin('user__roles', 'ur', 'ur.entity_id = n.uid');
+      $query->leftJoin('user__field_chargebee_payment_pause', 'pause', 'pause.entity_id = n.uid');
       
       $query->condition('n.type', 'badge_request');
       $query->condition('n.status', 1);
       $query->condition('status.field_badge_status_value', 'active');
-      $query->condition('ur.roles_target_id', ['member', 'current_member'], 'IN');
+      
+      $or = $query->orConditionGroup()
+        ->condition('ur.roles_target_id', ['member', 'current_member'], 'IN')
+        ->condition('pause.field_chargebee_payment_pause_value', 1);
+      $query->condition($or);
+      
       $query->condition('n.uid', 1, '>');
 
       $query->groupBy('n.uid');
@@ -513,6 +543,28 @@ class MemberStatsService {
   }
 
   /**
+   * Gets the number of appointments hosted by a volunteer in a given year.
+   */
+  public function getVolunteerHostedAppointments(int $uid, int $year): int {
+    try {
+      $start = $year . '-01-01T00:00:00';
+      $end = $year . '-12-31T23:59:59';
+
+      $query = $this->entityTypeManager->getStorage('node')->getQuery();
+      $query->condition('type', 'appointment');
+      $query->condition('field_appointment_host', $uid);
+      $query->condition('status', 1);
+      $query->condition('field_appointment_date', [$start, $end], 'BETWEEN');
+      $query->accessCheck(FALSE);
+
+      return (int) $query->count()->execute();
+    }
+    catch (\Exception $e) {
+      return 0;
+    }
+  }
+
+  /**
    * Gets the rank of a user based on appointments among active members.
    */
   public function getAppointmentRank(int $uid, int $year, int $user_count): int {
@@ -528,16 +580,94 @@ class MemberStatsService {
       $query->addExpression('COUNT(DISTINCT n.nid)', 'count');
       $query->innerJoin('node__field_appointment_date', 'd', 'd.entity_id = n.nid');
       $query->innerJoin('user__roles', 'ur', 'ur.entity_id = n.uid');
+      $query->leftJoin('user__field_chargebee_payment_pause', 'pause', 'pause.entity_id = n.uid');
       
       $query->condition('n.type', 'appointment');
       $query->condition('n.status', 1);
-      $query->condition('ur.roles_target_id', ['member', 'current_member'], 'IN');
+      
+      $or = $query->orConditionGroup()
+        ->condition('ur.roles_target_id', ['member', 'current_member'], 'IN')
+        ->condition('pause.field_chargebee_payment_pause_value', 1);
+      $query->condition($or);
+      
       $query->condition('d.field_appointment_date_value', [$start, $end], 'BETWEEN');
       
       $query->groupBy('n.uid');
       $query->having('count > :user_count', [':user_count' => $user_count]);
       
       return (int) $query->countQuery()->execute()->fetchField() + 1;
+    }
+    catch (\Exception $e) {
+      return 0;
+    }
+  }
+
+  /**
+   * Gets the rank of a user based on hosted appointments among active members.
+   */
+  public function getVolunteerHostedRank(int $uid, int $year, int $user_count): int {
+    if ($user_count === 0) {
+      return 0;
+    }
+
+    try {
+      $start = $year . '-01-01T00:00:00';
+      $end = $year . '-12-31T23:59:59';
+
+      $query = $this->database->select('node_field_data', 'n');
+      $query->addExpression('COUNT(DISTINCT n.nid)', 'count');
+      $query->innerJoin('node__field_appointment_date', 'd', 'd.entity_id = n.nid');
+      $query->innerJoin('node__field_appointment_host', 'h', 'h.entity_id = n.nid');
+      $query->innerJoin('user__roles', 'ur', 'ur.entity_id = h.field_appointment_host_target_id');
+      $query->leftJoin('user__field_chargebee_payment_pause', 'pause', 'pause.entity_id = h.field_appointment_host_target_id');
+
+      $query->condition('n.type', 'appointment');
+      $query->condition('n.status', 1);
+      
+      $or = $query->orConditionGroup()
+        ->condition('ur.roles_target_id', ['member', 'current_member'], 'IN')
+        ->condition('pause.field_chargebee_payment_pause_value', 1);
+      $query->condition($or);
+      
+      $query->condition('d.field_appointment_date_value', [$start, $end], 'BETWEEN');
+
+      $query->groupBy('h.field_appointment_host_target_id');
+      $query->having('count > :user_count', [':user_count' => $user_count]);
+
+      return (int) $query->countQuery()->execute()->fetchField() + 1;
+    }
+    catch (\Exception $e) {
+      return 0;
+    }
+  }
+
+  /**
+   * Gets the total number of distinct volunteer hosts in a given year.
+   */
+  public function getTotalVolunteerHosts(int $year): int {
+    try {
+      $start = $year . '-01-01T00:00:00';
+      $end = $year . '-12-31T23:59:59';
+
+      $query = $this->database->select('node_field_data', 'n');
+      $query->innerJoin('node__field_appointment_date', 'd', 'd.entity_id = n.nid');
+      $query->innerJoin('node__field_appointment_host', 'h', 'h.entity_id = n.nid');
+      $query->innerJoin('user__roles', 'ur', 'ur.entity_id = h.field_appointment_host_target_id');
+      $query->leftJoin('user__field_chargebee_payment_pause', 'pause', 'pause.entity_id = h.field_appointment_host_target_id');
+
+      $query->condition('n.type', 'appointment');
+      $query->condition('n.status', 1);
+      
+      $or = $query->orConditionGroup()
+        ->condition('ur.roles_target_id', ['member', 'current_member'], 'IN')
+        ->condition('pause.field_chargebee_payment_pause_value', 1);
+      $query->condition($or);
+      
+      $query->condition('d.field_appointment_date_value', [$start, $end], 'BETWEEN');
+
+      $query->addExpression('COUNT(DISTINCT h.field_appointment_host_target_id)');
+      
+      return (int) $query->execute()->fetchField();
     }
     catch (\Exception $e) {
       return 0;
@@ -555,6 +685,7 @@ class MemberStatsService {
       'goals' => [],
       'seniority_rank' => 0,
       'total_members' => 0,
+      'photo_url' => null,
     ];
 
     try {
@@ -565,11 +696,17 @@ class MemberStatsService {
       }
 
       // 1. Get Total Members (Active only)
-      $total_query = $this->database->select('profile', 'p');
-      $total_query->condition('p.type', 'main');
-      $total_query->condition('p.status', 1);
-      $total_query->join('user__roles', 'ur', 'ur.entity_id = p.uid');
-      $total_query->condition('ur.roles_target_id', ['member', 'current_member'], 'IN');
+      $total_query = $this->database->select('users_field_data', 'u');
+      $total_query->condition('u.status', 1);
+      $total_query->join('user__roles', 'ur', 'ur.entity_id = u.uid');
+      $total_query->leftJoin('user__field_chargebee_payment_pause', 'pause', 'pause.entity_id = u.uid');
+      
+      $or = $total_query->orConditionGroup()
+        ->condition('ur.roles_target_id', ['member', 'current_member'], 'IN')
+        ->condition('pause.field_chargebee_payment_pause_value', 1);
+      $total_query->condition($or);
+      
+      $total_query->condition('u.uid', 1, '>');
       $info['total_members'] = (int) $total_query->countQuery()->execute()->fetchField();
 
 
@@ -607,6 +744,37 @@ class MemberStatsService {
            $join_date_val = $profile->get('field_member_join_date')->value;
            $join_timestamp = strtotime($join_date_val);
         }
+
+        // Photo Logic
+        $file = NULL;
+        if ($profile->hasField('field_member_photo') && !$profile->get('field_member_photo')->isEmpty()) {
+          $entity = $profile->get('field_member_photo')->entity;
+          if ($entity instanceof \Drupal\file\FileInterface) {
+            $file = $entity;
+          }
+          elseif ($entity instanceof \Drupal\media\MediaInterface) {
+            // Check common media image fields
+            if ($entity->hasField('field_media_image') && !$entity->get('field_media_image')->isEmpty()) {
+              $file = $entity->get('field_media_image')->entity;
+            } elseif ($entity->hasField('image') && !$entity->get('image')->isEmpty()) {
+              $file = $entity->get('image')->entity;
+            }
+          }
+        }
+
+        // Fallback to User Picture
+        if (!$file && $user->hasField('user_picture') && !$user->get('user_picture')->isEmpty()) {
+           $file = $user->get('user_picture')->entity;
+        }
+
+        if ($file instanceof \Drupal\file\FileInterface) {
+          $style = \Drupal\image\Entity\ImageStyle::load('medium');
+          if ($style) {
+            $info['photo_url'] = $style->buildUrl($file->getFileUri());
+          } else {
+            $info['photo_url'] = \Drupal::service('file_url_generator')->generateAbsoluteString($file->getFileUri());
+          }
+        }
       }
 
       // 3. Calculate Tenure and Label
@@ -626,24 +794,48 @@ class MemberStatsService {
       }
 
       // 4. Calculate Rank
-      // Compare join_timestamp against all other profiles' field_member_join_date (or fallback?)
-      // Consistent ranking relies on everyone having the field. If accurate ranking is needed, we query the field.
-      // If we use $join_timestamp (which might be user->created), we compare it to value in DB.
-      $join_date_compare = date('Y-m-d', $join_timestamp);
+      // We calculate rank based on "Start Date".
+      // Start Date = field_member_join_date if set, else user.created.
+      // We count how many active members have a Start Date strictly earlier than this user's $join_timestamp.
+      
+      $my_date_str = date('Y-m-d', $join_timestamp);
+      
+      $query = $this->database->select('users_field_data', 'u');
+      $query->addExpression('COUNT(DISTINCT u.uid)');
+      $query->join('user__roles', 'ur', 'ur.entity_id = u.uid');
+      $query->leftJoin('profile', 'p', "p.uid = u.uid AND p.type = 'main' AND p.status = 1");
+      $query->leftJoin('profile__field_member_join_date', 'jd', 'jd.entity_id = p.profile_id');
+      $query->leftJoin('user__field_chargebee_payment_pause', 'pause', 'pause.entity_id = u.uid');
+      
+      $query->condition('u.status', 1);
+      
+      $or = $query->orConditionGroup()
+        ->condition('ur.roles_target_id', ['member', 'current_member'], 'IN')
+        ->condition('pause.field_chargebee_payment_pause_value', 1);
+      $query->condition($or);
 
-      $query = $this->database->select('profile__field_member_join_date', 'jd');
-      $query->condition('jd.field_member_join_date_value', $join_date_compare, '<');
-      $query->condition('jd.deleted', 0);
-      $query->join('profile', 'p', 'p.profile_id = jd.entity_id');
-      $query->condition('p.type', 'main');
-      $query->condition('p.status', 1);
+      $query->condition('u.uid', 1, '>'); // Exclude anon/admin(0/1) if needed, usually 1 is admin.
       
-      // Filter by Active Members only
-      $query->join('user__roles', 'ur', 'ur.entity_id = p.uid');
-      $query->condition('ur.roles_target_id', ['member', 'current_member'], 'IN');
+      // OR Group for seniority comparison
+      $or_group = $query->orConditionGroup();
       
-      // Add 1 because they are the Nth+1 person
-      $info['seniority_rank'] = (int) $query->countQuery()->execute()->fetchField() + 1;
+      // Case A: They have a specific Join Date that is earlier than ours
+      $grp_has_date = $query->andConditionGroup()
+        ->condition('jd.field_member_join_date_value', NULL, 'IS NOT NULL')
+        ->condition('jd.field_member_join_date_value', $my_date_str, '<');
+      
+      // Case B: They rely on created timestamp, which is earlier than ours
+      // Note: We only fall back to created if THEY don't have a specific join date.
+      $grp_no_date = $query->andConditionGroup()
+        ->condition('jd.field_member_join_date_value', NULL, 'IS NULL')
+        ->condition('u.created', $join_timestamp, '<');
+        
+      $or_group->condition($grp_has_date);
+      $or_group->condition($grp_no_date);
+      
+      $query->condition($or_group);
+      
+      $info['seniority_rank'] = (int) $query->execute()->fetchField() + 1;
 
     }
     catch (\Exception $e) {

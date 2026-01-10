@@ -2,3 +2,21 @@ services:
   makerspace_member_year_review.stats:
     class: Drupal\makerspace_member_year_review\Service\MemberStatsService
     arguments: ['@entity_type.manager', '@database', '@makerspace_dashboard.utilization_data']
+
+  makerspace_member_year_review.commands:
+    class: \Drupal\makerspace_member_year_review\Commands\MemberYearReviewCommands
+    arguments: ['@entity_type.manager', '@makerspace_member_year_review.stats_controller_helper']
+    tags:
+      - { name: drush.command }
+
+  makerspace_member_year_review.stats_controller_helper:
+    class: \Drupal\makerspace_member_year_review\Controller\MemberYearReviewController
+    arguments:
+      - '@makerspace_member_year_review.stats'
+      - '@makerspace_dashboard.membership_metrics'
+      - '@makerspace_dashboard.events_membership_data'
+      - '@makerspace_dashboard.utilization_data'
+      - '@makerspace_dashboard.engagement_data'
+      - '@makerspace_dashboard.appointment_insights'
+      - '@lending_library.stats_collector'
+      - '@makerspace_dashboard.demographics_data'
