@@ -18,6 +18,178 @@
   .leaderboard-card:hover {
     transform: translateY(-5px);
   }
+  .community-stat-card {
+    border: 0;
+    border-radius: 1.25rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #f8fafc, #ffffff);
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+    height: 100%;
+  }
+  .community-stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: #0f172a;
+    background: rgba(15, 23, 42, 0.08);
+    box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.08);
+  }
+  .community-stat-card .stat-value {
+    font-size: 2.1rem;
+    font-weight: 700;
+    color: #0f172a;
+  }
+  .community-stat-card .stat-subtext {
+    font-size: 0.9rem;
+    color: #6b7280;
+  }
+  .community-stat-icon span {
+    color: inherit;
+    line-height: 1;
+  }
+  .community-stat-card[class*='accent-'] {
+    color: #0f172a;
+  }
+  .community-stat-card.accent-blue {
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), #ffffff);
+  }
+  .community-stat-card.accent-blue .community-stat-icon,
+  .community-stat-card.accent-blue .stat-value {
+    color: #1d4ed8;
+  }
+  .community-stat-card.accent-blue .community-stat-icon {
+    background: rgba(29, 78, 216, 0.15);
+    box-shadow: inset 0 0 0 1px rgba(29, 78, 216, 0.2);
+  }
+  .community-stat-card.accent-teal {
+    background: linear-gradient(135deg, rgba(13, 148, 136, 0.08), #ffffff);
+  }
+  .community-stat-card.accent-teal .community-stat-icon,
+  .community-stat-card.accent-teal .stat-value {
+    color: #0f766e;
+  }
+  .community-stat-card.accent-teal .community-stat-icon {
+    background: rgba(15, 118, 110, 0.15);
+    box-shadow: inset 0 0 0 1px rgba(15, 118, 110, 0.2);
+  }
+  .community-stat-card.accent-green {
+    background: linear-gradient(135deg, rgba(5, 150, 105, 0.08), #ffffff);
+  }
+  .community-stat-card.accent-green .community-stat-icon,
+  .community-stat-card.accent-green .stat-value {
+    color: #059669;
+  }
+  .community-stat-card.accent-green .community-stat-icon {
+    background: rgba(5, 150, 105, 0.15);
+    box-shadow: inset 0 0 0 1px rgba(5, 150, 105, 0.2);
+  }
+  .community-stat-card.accent-purple {
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.08), #ffffff);
+  }
+  .community-stat-card.accent-purple .community-stat-icon,
+  .community-stat-card.accent-purple .stat-value {
+    color: #7c3aed;
+  }
+  .community-stat-card.accent-purple .community-stat-icon {
+    background: rgba(124, 58, 237, 0.15);
+    box-shadow: inset 0 0 0 1px rgba(124, 58, 237, 0.2);
+  }
+  .community-stat-card.accent-pink {
+    background: linear-gradient(135deg, rgba(236, 72, 153, 0.08), #ffffff);
+  }
+  .community-stat-card.accent-pink .community-stat-icon,
+  .community-stat-card.accent-pink .stat-value {
+    color: #db2777;
+  }
+  .community-stat-card.accent-pink .community-stat-icon {
+    background: rgba(219, 39, 119, 0.18);
+    box-shadow: inset 0 0 0 1px rgba(219, 39, 119, 0.25);
+  }
+  .community-stat-card.accent-orange {
+    background: linear-gradient(135deg, rgba(249, 115, 22, 0.1), #ffffff);
+  }
+  .community-stat-card.accent-orange .community-stat-icon,
+  .community-stat-card.accent-orange .stat-value {
+    color: #f97316;
+  }
+  .community-stat-card.accent-orange .community-stat-icon {
+    background: rgba(249, 115, 22, 0.16);
+    box-shadow: inset 0 0 0 1px rgba(249, 115, 22, 0.22);
+  }
+  .community-stat-card.accent-amber {
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.12), #ffffff);
+  }
+  .community-stat-card.accent-amber .community-stat-icon,
+  .community-stat-card.accent-amber .stat-value {
+    color: #b45309;
+  }
+  .community-stat-card.accent-amber .community-stat-icon {
+    background: rgba(180, 83, 9, 0.15);
+    box-shadow: inset 0 0 0 1px rgba(180, 83, 9, 0.22);
+  }
+  .community-stat-card.accent-slate {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.08), #ffffff);
+  }
+  .community-stat-card.accent-slate .community-stat-icon,
+  .community-stat-card.accent-slate .stat-value {
+    color: #334155;
+  }
+  .community-stat-card.accent-slate .community-stat-icon {
+    background: rgba(51, 65, 85, 0.15);
+    box-shadow: inset 0 0 0 1px rgba(51, 65, 85, 0.2);
+  }
+  .leaderboard-item {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-radius: 0.75rem;
+    margin-bottom: 0.4rem;
+  }
+  .leaderboard-item.is-current-member {
+    position: relative;
+    animation: leaderboardPulse 2.2s infinite;
+  }
+  .leaderboard-item.is-current-member.accent-warning {
+    background: rgba(250, 204, 21, 0.25);
+    box-shadow: 0 10px 20px rgba(250, 204, 21, 0.35);
+  }
+  .leaderboard-item.is-current-member.accent-primary {
+    background: rgba(59, 130, 246, 0.23);
+    box-shadow: 0 10px 20px rgba(59, 130, 246, 0.35);
+  }
+  .leaderboard-item.is-current-member.accent-green {
+    background: rgba(34, 197, 94, 0.23);
+    box-shadow: 0 10px 20px rgba(34, 197, 94, 0.35);
+  }
+  .leaderboard-item.is-current-member::before {
+    content: 'You';
+    position: absolute;
+    top: -0.75rem;
+    right: 1rem;
+    background: #0f172a;
+    color: #fff;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    padding: 0.15rem 0.45rem;
+    border-radius: 999px;
+    text-transform: uppercase;
+  }
+  @keyframes leaderboardPulse {
+    0% {
+      transform: scale(1);
+      box-shadow: 0 10px 20px rgba(59, 130, 246, 0.35);
+    }
+    50% {
+      transform: scale(1.01);
+      box-shadow: 0 15px 25px rgba(59, 130, 246, 0.45);
+    }
+    100% {
+      transform: scale(1);
+      box-shadow: 0 10px 20px rgba(59, 130, 246, 0.35);
+    }
+  }
 </style>
 
 <div class="year-in-review container my-5">
@@ -183,9 +355,9 @@
   {% endif %}
 
   <div class="profile-details-section text-center mb-5 p-4 bg-white rounded border shadow-sm">
-    {% if profile.goals %}
-      <div class="goals-container">
-        <h3 class="h5 text-muted">Your Selected Goals for {{ year }}</h3>
+    <div class="goals-container">
+      <h3 class="h5 text-muted">Your Selected Goals</h3>
+      {% if profile.goals %}
         {% for goal in profile.goals %}
           {% set icon_class = 'fa-star' %}
           {% if goal.key == 'artist' %}{% set icon_class = 'fa-paint-brush' %}
@@ -198,11 +370,13 @@
           {% endif %}
           
           <div class="badge bg-light text-dark border p-2 m-1 d-inline-block">
-             <i class="fas {{ icon_class }} me-1 text-primary"></i> {{ goal.label }}
+            <i class="fas {{ icon_class }} me-1 text-primary"></i> {{ goal.label }}
           </div>
         {% endfor %}
-      </div>
-    {% endif %}
+      {% else %}
+        <p class="text-muted mb-3">Set a few personal goals to tailor your Year in Review.</p>
+      {% endif %}
+    </div>
 
     {% if profile.areas_of_interest %}
       <div class="interests-container mt-4">
@@ -214,7 +388,7 @@
     {% endif %}
     
     <div class="mt-4">
-      <a href="/user/member/id/{{ user_id }}/interests-goal" class="btn btn-sm btn-primary text-white">
+      <a href="/user/member/id/{{ user_id }}/interests-goals" class="btn btn-sm btn-primary text-white">
         <i class="fas fa-pencil-alt me-1"></i> Update Goals & Interests
       </a>
     </div>
@@ -282,52 +456,82 @@
       <p class="lead text-muted">See what we achieved together as a makerspace.</p>
     </div>
 
-    {# Community Stats Grid #}
-    <div class="row text-center mb-5 justify-content-center g-3">
-      <div class="col-md-2 col-6">
-        <div class="card h-100 border-0 bg-light p-3 shadow-sm">
-          <div class="h3 fw-bold text-secondary">{{ community_full_report.stats.members_start_2025 }}</div>
-          <div class="small text-uppercase text-muted" style="font-size: 0.7rem;">Members (Jan 1)</div>
+    {% set community_stat_cards = [
+      {
+        'label': 'Members (Jan 1)',
+        'value': community_full_report.stats.members_start_2025|default('0'),
+        'subtext': 'Active members to start ' ~ year,
+        'icon': '📅',
+        'accent': 'blue'
+      },
+      {
+        'label': 'Members (Dec 31)',
+        'value': community_full_report.stats.members_end_2025|default('0'),
+        'subtext': 'Includes paused accounts',
+        'icon': '🏁',
+        'accent': 'teal'
+      },
+      {
+        'label': 'New Member Signups',
+        'value': community_full_report.stats.total_joins|default('0'),
+        'subtext': 'Joined during ' ~ year,
+        'icon': '🙋‍♂️',
+        'accent': 'green'
+      },
+      {
+        'label': 'Workshop Registrations',
+        'value': community_full_report.stats.workshop_registrations|default('0'),
+        'subtext': 'Classes & trainings attended',
+        'icon': '🎓',
+        'accent': 'purple'
+      },
+      {
+        'label': 'Volunteer Appointments',
+        'value': community_full_report.stats.appointments|default('0'),
+        'subtext': 'Coaching & volunteer sessions',
+        'icon': '🤝',
+        'accent': 'pink'
+      },
+      {
+        'label': 'Tool Loans',
+        'value': community_full_report.stats.tool_loans|default('0'),
+        'subtext': 'Tools checked out from lending',
+        'icon': '🧰',
+        'accent': 'orange'
+      },
+      {
+        'label': 'Badges Earned',
+        'value': community_full_report.stats.badges_earned|default('0'),
+        'subtext': 'Members certified this year',
+        'icon': '🏅',
+        'accent': 'amber'
+      },
+      {
+        'label': 'Total Visits',
+        'value': community_full_report.stats.total_visits|default('0'),
+        'subtext': 'Unique daily entries logged',
+        'icon': '🚪',
+        'accent': 'slate'
+      }
+    ] %}
+
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-4 mb-5">
+      {% for stat in community_stat_cards %}
+        <div class="col">
+          <div class="community-stat-card accent-{{ stat.accent }}">
+            <div class="d-flex align-items-center mb-3">
+              <div class="community-stat-icon" aria-hidden="true">
+                <span class="fs-4">{{ stat.icon }}</span>
+              </div>
+              <div class="ms-3 text-uppercase small text-muted">{{ stat.label }}</div>
+            </div>
+            <div class="stat-value">{{ stat.value }}</div>
+            {% if stat.subtext %}
+              <div class="stat-subtext">{{ stat.subtext }}</div>
+            {% endif %}
+          </div>
         </div>
-      </div>
-      <div class="col-md-1 d-none d-md-flex align-items-center justify-content-center">
-         <i class="fas fa-arrow-right text-muted"></i>
-      </div>
-      <div class="col-md-2 col-6">
-        <div class="card h-100 border-0 bg-primary-subtle p-3 shadow-sm">
-          <div class="h3 fw-bold text-primary">{{ community_full_report.stats.members_end_2025 }}</div>
-          <div class="small text-uppercase text-primary fw-bold" style="font-size: 0.7rem;">Members (Dec 31)</div>
-          <div class="extra-small text-muted" style="font-size: 0.6rem;">(Includes paused)</div>
-        </div>
-      </div>
-      <div class="col-md-2 col-6">
-        <div class="h3 fw-bold text-dark">{{ community_full_report.stats.total_joins }}</div>
-        <div class="small text-uppercase text-muted">New Members</div>
-      </div>
-      <div class="col-md-2 col-6">
-        <div class="h3 fw-bold text-dark">{{ community_full_report.stats.workshop_registrations }}</div>
-        <div class="small text-uppercase text-muted">Workshop Reg.</div>
-      </div>
-      <div class="col-md-2 col-6">
-        <div class="h3 fw-bold text-dark">{{ community_full_report.stats.appointments }}</div>
-        <div class="small text-uppercase text-muted">Volunteer Appt.</div>
-      </div>
-    </div>
-    
-    <div class="row text-center mb-5 justify-content-center g-3">
-      <div class="col-md-2 col-6">
-        <div class="h3 fw-bold text-dark">{{ community_full_report.stats.tool_loans }}</div>
-        <div class="small text-uppercase text-muted">Tool Loans</div>
-      </div>
-      <div class="col-md-2 col-6">
-        <div class="h3 fw-bold text-dark">{{ community_full_report.stats.badges_earned }}</div>
-        <div class="small text-uppercase text-muted">Badges Earned</div>
-      </div>
-      <div class="col-md-2 col-6">
-        <div class="h3 fw-bold text-dark">{{ community_full_report.stats.total_visits }}</div>
-        <div class="small text-uppercase text-muted">Total Visits</div>
-        <div class="extra-small text-muted" style="font-size: 0.75rem;">(Unique/Day)</div>
-      </div>
+      {% endfor %}
     </div>
 
     {# Leaderboards Row - MOVED HERE #}
@@ -344,7 +548,7 @@
           </div>
           <ul class="list-group list-group-flush">
             {% for member in community_full_report.leaderboards.badges_year %}
-              <li class="list-group-item d-flex justify-content-between align-items-center {{ member.uid == user_id ? 'bg-warning-subtle fw-bold border-start border-warning border-4' : '' }}">
+              <li class="list-group-item d-flex justify-content-between align-items-center leaderboard-item {{ member.uid == user_id ? 'is-current-member accent-warning' : '' }}">
                 <div class="d-flex align-items-center">
                   <span class="text-muted small me-2" style="width: 30px;">#{{ loop.index }}</span>
                   {% if member.photo_url %}
@@ -371,7 +575,7 @@
           </div>
           <ul class="list-group list-group-flush">
             {% for member in community_full_report.leaderboards.visits_year %}
-              <li class="list-group-item d-flex justify-content-between align-items-center {{ member.uid == user_id ? 'bg-primary-subtle fw-bold border-start border-primary border-4' : '' }}">
+              <li class="list-group-item d-flex justify-content-between align-items-center leaderboard-item {{ member.uid == user_id ? 'is-current-member accent-primary' : '' }}">
                 <div class="d-flex align-items-center">
                   <span class="text-muted small me-2" style="width: 30px;">#{{ loop.index }}</span>
                   {% if member.photo_url %}
@@ -398,7 +602,7 @@
           </div>
           <ul class="list-group list-group-flush">
             {% for member in community_full_report.leaderboards.badges_overall %}
-              <li class="list-group-item d-flex justify-content-between align-items-center {{ member.uid == user_id ? 'bg-success-subtle fw-bold border-start border-success border-4' : '' }}">
+              <li class="list-group-item d-flex justify-content-between align-items-center leaderboard-item {{ member.uid == user_id ? 'is-current-member accent-green' : '' }}">
                 <div class="d-flex align-items-center">
                   <span class="text-muted small me-2" style="width: 30px;">#{{ loop.index }}</span>
                   {% if member.photo_url %}
@@ -466,18 +670,6 @@
       <a href="/makerspace-dashboard/year-over-year" class="btn btn-primary btn-lg text-white">
         <i class="fas fa-chart-line me-2"></i> View Full Community Dashboard
       </a>
-    </div>
-  </div>
-
-  {# Survey at the very bottom #}
-  <div class="row justify-content-center mt-5">
-    <div class="col-md-8">
-      <div class="alert alert-info text-center shadow-sm p-5" role="alert">
-        <h4 class="alert-heading display-6 mb-3"><i class="fas fa-clipboard-list me-2"></i>Help us improve!</h4>
-        <p class="lead">Please take a moment to update your information and share your feedback in our annual survey.</p>
-        <hr>
-        <a href="https://makehaven.org/survey" class="btn btn-primary btn-lg px-5">Complete Annual Survey</a>
-      </div>
     </div>
   </div>
 
