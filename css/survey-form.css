@@ -1,0 +1,224 @@
+.survey-form-wrapper {
+  --survey-primary: #2563eb;
+  --survey-primary-light: #eff4ff;
+  --survey-border: #d1d5db;
+  --survey-text: #374151;
+}
+
+.survey-form-wrapper fieldset {
+  border: 0;
+  padding: 0;
+}
+
+.survey-form-wrapper legend {
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: var(--survey-text);
+  margin-bottom: 0.75rem;
+}
+
+.survey-form-wrapper fieldset {
+  margin-bottom: 2.5rem;
+}
+
+.survey-form-wrapper fieldset + fieldset {
+  margin-top: 1.25rem;
+}
+
+.survey-form-wrapper .fieldset-wrapper > .description,
+.survey-form-wrapper small.description {
+  font-size: 0.9rem;
+}
+
+/* Make entire tile clickable and include description */
+.survey-form-wrapper .js-webform-type-checkbox,
+.survey-form-wrapper .js-webform-type-checkboxes .form-check,
+.survey-form-wrapper .checkboxes--wrapper .form-check {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 0.4rem;
+  padding: 1.25rem 1.25rem 1rem;
+  margin-bottom: 0;
+  border-radius: 14px;
+  border: 1px solid var(--survey-border);
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+  min-height: 130px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease,
+    background 0.2s ease;
+  cursor: pointer;
+}
+
+.survey-form-wrapper .js-webform-type-checkbox label,
+.survey-form-wrapper .js-webform-type-checkbox .form-check-label,
+.survey-form-wrapper .checkboxes--wrapper .form-check-label {
+  font-weight: 600;
+  color: var(--survey-text);
+  cursor: pointer;
+  margin-bottom: 0;
+  pointer-events: none;
+  position: relative;
+  z-index: 1;
+  font-size: 0.95rem;
+}
+
+.survey-form-wrapper .js-webform-type-checkbox small.description,
+.survey-form-wrapper .checkboxes--wrapper small.description {
+  display: block;
+  font-weight: 400;
+  color: #6b7280;
+  pointer-events: none;
+  position: relative;
+  z-index: 1;
+  font-size: 0.9rem;
+}
+
+.survey-form-wrapper .js-webform-type-checkbox input[type='checkbox'],
+.survey-form-wrapper .checkboxes--wrapper input[type='checkbox'] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 2;
+  margin: 0;
+}
+
+.survey-form-wrapper .js-webform-type-checkbox:focus-within,
+.survey-form-wrapper .checkboxes--wrapper .form-check:focus-within {
+  border-color: var(--survey-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+.survey-form-wrapper .js-webform-type-checkbox:has(input:checked),
+.survey-form-wrapper .checkboxes--wrapper .form-check:has(input:checked) {
+  border-color: var(--survey-primary);
+  background: rgba(37, 99, 235, 0.18);
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.25);
+}
+
+.survey-form-wrapper .js-webform-type-checkbox:has(input:checked) label,
+.survey-form-wrapper .js-webform-type-checkbox:has(input:checked)
+  .form-check-label,
+.survey-form-wrapper .js-webform-type-checkbox:has(input:checked)
+  small.description,
+.survey-form-wrapper .checkboxes--wrapper .form-check:has(input:checked)
+  .form-check-label,
+.survey-form-wrapper .checkboxes--wrapper .form-check:has(input:checked)
+  small.description {
+  color: #0f2f91;
+}
+
+.survey-form-wrapper #edit-activity-checkboxes,
+.survey-form-wrapper #edit-narrative-share {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 1rem;
+}
+
+.survey-form-wrapper .webform-checkboxes-other-input {
+  margin-top: 1rem;
+}
+
+.survey-form-wrapper .webform-checkboxes-other-input input {
+  border-radius: 10px;
+  border: 1px solid var(--survey-border);
+  padding: 0.75rem 1rem;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+
+.survey-form-wrapper .webform-scale-options {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 0.35rem;
+  margin-top: 0.75rem;
+}
+
+.survey-form-wrapper .webform-scale-option {
+  min-width: 0;
+}
+
+.survey-form-wrapper .webform-scale-option .form-check {
+  position: relative;
+  border-radius: 10px;
+  padding: 0;
+  min-height: auto;
+  overflow: hidden;
+}
+
+.survey-form-wrapper .webform-scale-option .form-check-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 0;
+  width: 100%;
+  font-weight: 600;
+  margin-bottom: 0;
+  pointer-events: none;
+}
+
+.survey-form-wrapper .webform-scale-option input[type='radio'] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  cursor: pointer;
+  opacity: 0;
+  z-index: 2;
+  clip: auto !important;
+  clip-path: none !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.survey-form-wrapper .webform-scale-option .form-check:focus-within {
+  border-color: var(--survey-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+.survey-form-wrapper .webform-scale-option .form-check:has(input:checked) {
+  border-color: var(--survey-primary);
+  background: rgba(37, 99, 235, 0.2);
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.25);
+}
+
+.survey-form-wrapper .webform-scale-option
+  .form-check:has(input:checked)
+  .form-check-label {
+  color: #0f2f91;
+  font-weight: 700;
+}
+
+.survey-form-wrapper .webform-scale-option .form-check small.description {
+  display: none;
+}
+
+.survey-form-wrapper .webform-scale-option .form-check::after {
+  display: none;
+}
+
+.survey-form-wrapper .webform-scale-text {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.95rem;
+  color: #4b5563;
+  margin-top: 0.75rem;
+  font-weight: 600;
+  text-transform: none;
+}
+
+.survey-form-wrapper .webform-scale-text-min,
+.survey-form-wrapper .webform-scale-text-max {
+  width: 50%;
+}
+
+.survey-form-wrapper .form-actions .btn {
+  border-radius: 999px;
+  padding: 0.85rem 2.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
