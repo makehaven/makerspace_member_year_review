@@ -98,55 +98,26 @@ class MemberYearReviewController extends ControllerBase {
    */
   public function page(UserInterface $user) {
     // Hardcoded to 2025 per requirement, or previous year logic
-    $year = 2025; 
-    $prev_year = $year - 1;
+    $year = 2025;
     
-    // Fetch Data Current Year
-    $visit_days = $this->statsService->getVisitDays($user->id(), $year);
-    $attendance = $this->statsService->getEventAttendance($user->id(), $year);
-    $badges = $this->statsService->getBadgesEarned($user->id(), $year);
-    $loans = $this->statsService->getLendingUsage($user->id(), $year);
+    // Check Cache
+    $cid = 'makerspace_member_year_review:user_stats:' . $user->id() . ':' . $year;
+    if ($cache = \Drupal::cache()->get($cid)) {
+      $cached_data = $cache->data;
+    } else {
+      $cached_data = $this->calculateUserStats($user, $year);
+      // Cache for 24 hours
+      \Drupal::cache()->set($cid, $cached_data, time() + 86400, ['user:' . $user->id(), 'node_list:appointment', 'node_list:badge_request']);
+    }
 
-    // Fetch Data Previous Year (for comparison)
-    $visit_days_prev = $this->statsService->getVisitDays($user->id(), $prev_year);
-    $attendance_prev = $this->statsService->getEventAttendance($user->id(), $prev_year);
-    $badges_prev = $this->statsService->getBadgesEarned($user->id(), $prev_year);
-    $loans_prev = $this->statsService->getLendingUsage($user->id(), $prev_year);
-
-    // Member Info
-    $profile_info = $this->statsService->getMemberProfileInfo($user->id());
-
-    // Calculate Deltas
-    $deltas = [
-      'visits' => NULL, // Data incomplete for 2024
-      'events' => $this->calculateDelta($attendance['count'], $attendance_prev['count']),
-      'badges' => $this->calculateDelta(count($badges), count($badges_prev)),
-      'loans' => $this->calculateDelta($loans, $loans_prev),
-    ];
-
-    // --- Community Stats & Ranking ---
+    // Community Stats & Ranking
     $start = new \DateTimeImmutable("$year-01-01");
     $end = new \DateTimeImmutable("$year-12-31 23:59:59");
-
+    
     // 1. Total Active Members (approximate for year end)
-    $active_members_count = $this->membershipMetrics->getMonthlyActiveMemberCounts(1)[0]['count'] ?? $profile_info['total_members'];
+    $active_members_count = $this->membershipMetrics->getMonthlyActiveMemberCounts(1)[0]['count'] ?? $cached_data['profile']['total_members'];
 
-    // Appointments
-    $appointments = $this->statsService->getAppointments($user->id(), $year);
-
-    // 2. Calculate Ranks
-    $ranks = [
-      'visits' => $this->estimateRank($visit_days, 'visits'),
-      'badges' => $this->estimateRank(count($badges), 'badges'),
-      'events' => $this->estimateRank($attendance['count'], 'events'),
-      'loans' => $this->estimateRank($loans, 'loans'),
-      'appointments' => $this->estimateRank($appointments, 'events'), // Reuse events thresholds for now
-      'visits_num' => $this->statsService->getVisitDaysRank($user->id(), $year, $visit_days),
-      'badges_num' => $this->statsService->getBadgesEarnedRank($user->id(), $year, count($badges)),
-      'appointments_num' => $this->statsService->getAppointmentRank($user->id(), $year, $appointments),
-    ];
-
-    // 3. Community Highlights (Simplified for top teaser)
+    // 2. Community Highlights
     $community_stats = [
       'total_members' => number_format($active_members_count),
       'new_members' => $this->getCommunityNewMembers($start, $end),
@@ -154,11 +125,8 @@ class MemberYearReviewController extends ControllerBase {
       'badges_earned' => $this->getCommunityBadgesEarned($start, $end),
     ];
 
-    // 4. Community Full Report (Cached)
+    // 3. Community Full Report (Cached)
     $community_full_report = $this->getCommunityYearStats($year);
-
-    // 5. Fun Awards
-    $fun_award = $this->statsService->getMakerPersona($user->id(), $year, count($badges), $attendance['count'], $loans);
 
     $first_name = $user->getDisplayName();
     if ($user->hasField('field_first_name') && !$user->get('field_first_name')->isEmpty()) {
@@ -171,23 +139,15 @@ class MemberYearReviewController extends ControllerBase {
       '#first_name' => $first_name,
       '#user_id' => $user->id(),
       '#year' => $year,
-      '#profile' => $profile_info,
-      '#deltas' => $deltas,
-      '#ranks' => $ranks,
+      '#profile' => $cached_data['profile'],
+      '#photo_url' => $cached_data['profile']['photo_url'] ?? NULL,
+      '#deltas' => $cached_data['deltas'],
+      '#ranks' => $cached_data['ranks'],
       '#active_members_total' => $active_members_count,
       '#community_stats' => $community_stats,
       '#community_full_report' => $community_full_report,
-      '#fun_award' => $fun_award,
-      '#stats' => [
-        'visits' => $visit_days,
-        'visits_prev' => $visit_days_prev,
-        'events_count' => $attendance['count'],
-        'events_list' => $attendance['events'],
-        'badges_count' => count($badges),
-        'badges_list' => $badges,
-        'loans_count' => $loans,
-        'appointments' => $appointments,
-      ],
+      '#fun_award' => $cached_data['fun_award'],
+      '#stats' => $cached_data['stats'],
       '#cache' => [
         'contexts' => ['user'],
         'tags' => ['user:' . $user->id(), 'community_year_stats:' . $year],
@@ -208,6 +168,78 @@ class MemberYearReviewController extends ControllerBase {
   }
 
   /**
+   * Calculates all user stats for the year (Heavy lifting).
+   */
+  public function calculateUserStats(UserInterface $user, int $year): array {
+    $prev_year = $year - 1;
+
+    // Fetch Data Current Year
+    $visit_days = $this->statsService->getVisitDays($user->id(), $year);
+    $attendance = $this->statsService->getEventAttendance($user->id(), $year);
+    $badges = $this->statsService->getBadgesEarned($user->id(), $year);
+    $loans = $this->statsService->getLendingUsage($user->id(), $year);
+    $appointments = $this->statsService->getAppointments($user->id(), $year);
+    $volunteer_hosted = $this->statsService->getVolunteerHostedAppointments($user->id(), $year);
+    $total_volunteers = $this->statsService->getTotalVolunteerHosts($year);
+
+    // Fetch Data Previous Year (for comparison)
+    $visit_days_prev = $this->statsService->getVisitDays($user->id(), $prev_year);
+    $attendance_prev = $this->statsService->getEventAttendance($user->id(), $prev_year);
+    $badges_prev = $this->statsService->getBadgesEarned($user->id(), $prev_year);
+    $loans_prev = $this->statsService->getLendingUsage($user->id(), $prev_year);
+    $volunteer_hosted_prev = $this->statsService->getVolunteerHostedAppointments($user->id(), $prev_year);
+
+    // Member Info
+    $profile_info = $this->statsService->getMemberProfileInfo($user->id());
+
+    // Calculate Deltas
+    $deltas = [
+      'visits' => NULL, // Data incomplete for 2024
+      'events' => $this->calculateDelta($attendance['count'], $attendance_prev['count']),
+      'badges' => $this->calculateDelta(count($badges), count($badges_prev)),
+      'loans' => $this->calculateDelta($loans, $loans_prev),
+      'volunteer_hosted' => $this->calculateDelta($volunteer_hosted, $volunteer_hosted_prev),
+    ];
+
+    // Ranks
+    $ranks = [
+      'visits' => $this->estimateRank($visit_days, 'visits'),
+      'badges' => $this->estimateRank(count($badges), 'badges'),
+      'events' => $this->estimateRank($attendance['count'], 'events'),
+      'loans' => $this->estimateRank($loans, 'loans'),
+      'appointments' => $this->estimateRank($appointments, 'events'), 
+      'volunteer_hosted' => $this->estimateRank($volunteer_hosted, 'volunteer_hosted'),
+      
+      'visits_num' => $this->statsService->getVisitDaysRank($user->id(), $year, $visit_days),
+      'badges_num' => $this->statsService->getBadgesEarnedRank($user->id(), $year, count($badges)),
+      'appointments_num' => $this->statsService->getAppointmentRank($user->id(), $year, $appointments),
+      'volunteer_hosted_num' => $this->statsService->getVolunteerHostedRank($user->id(), $year, $volunteer_hosted),
+    ];
+
+    // Fun Award
+    $fun_award = $this->statsService->getMakerPersona($user->id(), $year, count($badges), $attendance['count'], $loans);
+
+    return [
+      'stats' => [
+        'visits' => $visit_days,
+        'visits_prev' => $visit_days_prev,
+        'events_count' => $attendance['count'],
+        'events_list' => $attendance['events'],
+        'badges_count' => count($badges),
+        'badges_list' => $badges,
+        'loans_count' => $loans,
+        'appointments' => $appointments,
+        'volunteer_hosted' => $volunteer_hosted,
+        'total_volunteers' => $total_volunteers,
+      ],
+      'deltas' => $deltas,
+      'ranks' => $ranks,
+      'profile' => $profile_info,
+      'fun_award' => $fun_award,
+    ];
+  }
+
+  /**
    * Fetches and caches community stats for the year.
    */
   protected function getCommunityYearStats(int $year): array {
@@ -224,6 +256,10 @@ class MemberYearReviewController extends ControllerBase {
     
     // Total Joins
     $stats['total_joins'] = $this->getCommunityNewMembers($start, $end);
+
+    // Membership Growth
+    $stats['members_start_2025'] = 779;
+    $stats['members_end_2025'] = 883;
 
     // Workshops
     $stats['workshops_held'] = $this->getCommunityWorkshopsHeld($start, $end);
@@ -360,9 +396,23 @@ class MemberYearReviewController extends ControllerBase {
             '#chart_type' => 'column',
             '#height' => 600,
             '#height_units' => 'px',
+            '#options' => [
+              'vAxis' => [
+                'viewWindow' => [
+                  'min' => 0,
+                ],
+              ],
+            ],
+            '#raw_options' => [
+              'vAxis' => [
+                'viewWindow' => [
+                  'min' => 0,
+                ],
+              ],
+            ],
             'xaxis' => ['#type' => 'chart_xaxis', '#labels' => $visitLabels],
-            'yaxis' => ['#type' => 'chart_yaxis', '#title' => $this->t('Visits')],
-            'visits' => ['#type' => 'chart_data', '#title' => $this->t('Total Visits'), '#data' => $visitValues, '#color' => '#10b981'],
+            'yaxis' => ['#type' => 'chart_yaxis', '#title' => $this->t('Visits'), '#min' => 0],
+            'visits' => ['#type' => 'chart_data', '#title' => $this->t('Total Visits (Unique/Day)'), '#data' => $visitValues, '#color' => '#10b981'],
         ];
     }
 
@@ -485,6 +535,7 @@ class MemberYearReviewController extends ControllerBase {
       'badges' => [10 => 'Top 1%', 5 => 'Top 5%', 3 => 'Top 10%', 1 => 'Badge Earner'],
       'events' => [20 => 'Top 1%', 10 => 'Top 5%', 5 => 'Top 10%', 1 => 'Learner'],
       'loans' => [20 => 'Top 1%', 10 => 'Top 5%', 5 => 'Top 10%', 1 => 'Borrower'],
+      'volunteer_hosted' => [20 => 'Top 1%', 10 => 'Top 5%', 5 => 'Top 10%', 1 => 'Volunteer Host'],
     ];
 
     $label = 'Member';
