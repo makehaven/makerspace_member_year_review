@@ -11,6 +11,27 @@
     background-position: 0 0, 50px 50px, 25px 75px, 75px 25px;
     background-size: 100px 100px;
     background-color: transparent;
+    border-radius: 50%;
+    overflow: hidden;
+    position: relative;
+    animation: confetti-drift 12s linear infinite;
+  }
+  .confetti-bg::before {
+    content: "";
+    position: absolute;
+    inset: 6px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.9), 0 10px 20px rgba(15, 23, 42, 0.12);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .confetti-bg img {
+    position: relative;
+    z-index: 1;
+  }
+  @keyframes confetti-drift {
+    0% { background-position: 0 0, 50px 50px, 25px 75px, 75px 25px; }
+    100% { background-position: 40px 30px, 10px 70px, 60px 20px, 20px 90px; }
   }
   .leaderboard-card {
     transition: transform 0.2s;
@@ -252,7 +273,7 @@
 
   <div class="yir-grid row text-center justify-content-center">
     
-    {% if stats.visits > 0 %}
+    {% if stats.visits >= 5 %}
     <div class="col-md-3 mb-4">
       <div class="card h-100 shadow-sm border-0 bg-light">
         <div class="card-body">
@@ -370,6 +391,11 @@
 
   </div>
 
+  <div class="text-center text-muted small mt-2 mb-4">
+    Ranks and percentiles are calculated against active members (current or paused), so former members are excluded.
+    This reflects 2025 activity of the members who are still around today.
+  </div>
+
   {% if fun_award %}
   <div class="row justify-content-center mt-4 mb-5">
     <div class="col-md-6 text-center">
@@ -395,8 +421,34 @@
 
   <div class="profile-details-section text-center mb-5 p-4 bg-white rounded border shadow-sm">
     <div class="goals-container">
-      <h3 class="h5 text-muted">Your Selected Goals</h3>
-      {% if profile.goals %}
+      <h3 class="h5 text-muted">Goals at MakeHaven</h3>
+      {% if profile.goals_matrix %}
+        <div class="row g-2">
+          {% for goal in profile.goals_matrix %}
+            {% set icon_class = 'fa-star' %}
+            {% if goal.key == 'artist' %}{% set icon_class = 'fa-paint-brush' %}
+            {% elseif goal.key == 'skill_builder' %}{% set icon_class = 'fa-tools' %}
+            {% elseif goal.key == 'hobbyist' %}{% set icon_class = 'fa-heart' %}
+            {% elseif goal.key == 'inventor' %}{% set icon_class = 'fa-lightbulb' %}
+            {% elseif goal.key == 'entrepreneur' %}{% set icon_class = 'fa-briefcase' %}
+            {% elseif goal.key == 'seller' %}{% set icon_class = 'fa-store' %}
+            {% elseif goal.key == 'networker' %}{% set icon_class = 'fa-users' %}
+            {% endif %}
+
+            <div class="col-12 col-md-6">
+              <div class="d-flex align-items-center p-2 border rounded h-100 {% if goal.selected %}bg-light border-success{% else %}bg-white{% endif %}">
+                {% if goal.selected %}
+                  <i class="fas fa-check-circle text-success me-2"></i>
+                {% else %}
+                  <i class="fas fa-circle text-muted me-2"></i>
+                {% endif %}
+                <i class="fas {{ icon_class }} me-2 text-primary"></i>
+                <span class="{% if goal.selected %}text-dark fw-semibold{% else %}text-muted{% endif %}">{{ goal.label }}</span>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% elseif profile.goals %}
         {% for goal in profile.goals %}
           {% set icon_class = 'fa-star' %}
           {% if goal.key == 'artist' %}{% set icon_class = 'fa-paint-brush' %}
@@ -407,7 +459,7 @@
           {% elseif goal.key == 'seller' %}{% set icon_class = 'fa-store' %}
           {% elseif goal.key == 'networker' %}{% set icon_class = 'fa-users' %}
           {% endif %}
-          
+
           <div class="badge bg-light text-dark border p-2 m-1 d-inline-block">
             <i class="fas {{ icon_class }} me-1 text-primary"></i> {{ goal.label }}
           </div>
@@ -417,7 +469,40 @@
       {% endif %}
     </div>
 
-    {% if profile.areas_of_interest %}
+    {% if profile.areas_of_interest_matrix %}
+      <div class="interests-container mt-4">
+        <h4 class="h6 text-muted">Areas of Interest</h4>
+        <div class="row g-3">
+          {% for column in profile.areas_of_interest_matrix %}
+            <div class="col-12 col-md-6 col-lg-4">
+              <div class="p-2 border rounded h-100 {% if column.selected %}bg-light border-success{% else %}bg-white{% endif %}">
+                <div class="fw-semibold small mb-2 {% if column.selected %}text-success{% else %}text-primary{% endif %}">
+                  {% if column.selected %}
+                    <i class="fas fa-check-circle me-1 text-success"></i>
+                  {% else %}
+                    <i class="fas fa-circle me-1 text-muted"></i>
+                  {% endif %}
+                  {{ column.label }}
+                </div>
+                <ul class="list-unstyled mb-0 small">
+                  {% for term in column.terms %}
+                    <li class="d-flex align-items-start mb-1">
+                      {% if term.selected %}
+                        <i class="fas fa-check-circle text-success me-1 mt-1"></i>
+                        <span class="text-dark fw-semibold">{{ term.label }}</span>
+                      {% else %}
+                        <i class="fas fa-circle text-muted me-1 mt-1"></i>
+                        <span class="text-muted">{{ term.label }}</span>
+                      {% endif %}
+                    </li>
+                  {% endfor %}
+                </ul>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% elseif profile.areas_of_interest %}
       <div class="interests-container mt-4">
         <h4 class="h6 text-muted">Areas of Interest</h4>
         {% for interest in profile.areas_of_interest %}
@@ -427,7 +512,7 @@
     {% endif %}
     
     <div class="mt-4">
-      <a href="/user/member/id/{{ user_id }}/interests-goals" class="btn btn-sm btn-primary text-white">
+      <a href="/user/member/id/{{ user_id }}/interests-goals" class="btn btn-sm btn-primary text-white" target="_blank" rel="noopener">
         <i class="fas fa-pencil-alt me-1"></i> Update Goals & Interests
       </a>
     </div>
@@ -467,7 +552,7 @@
           {% endfor %}
         </ul>
          <div class="card-body">
-            <a href="/badges" class="btn btn-primary btn-sm w-100 text-white">Earn more badges</a>
+            <a href="/badges" class="btn btn-primary btn-sm w-100 text-white" target="_blank" rel="noopener">Earn more badges</a>
          </div>
       </div>
     </div>
@@ -483,11 +568,29 @@
           {% endfor %}
         </ul>
         <div class="card-body">
-            <a href="/events" class="btn btn-primary btn-sm w-100 text-white">Find upcoming events</a>
+            <a href="/events" class="btn btn-primary btn-sm w-100 text-white" target="_blank" rel="noopener">Find upcoming events</a>
          </div>
       </div>
     </div>
   </div>
+
+  {% if encouragement %}
+    <div class="row justify-content-center mb-5">
+      <div class="col-lg-8">
+        <div class="card shadow-sm border-0 bg-light">
+          <div class="card-body p-4 p-md-5">
+            <h3 class="h5 text-primary mb-2">Looking ahead to 2026</h3>
+            <p class="text-muted mb-3">{{ encouragement.text }}</p>
+            {% if encouragement.link_url %}
+              <a href="{{ encouragement.link_url }}" class="btn btn-primary btn-sm text-white" target="_blank" rel="noopener">
+                {{ encouragement.link_label }}
+              </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
 
   <div class="community-report-section mt-5 pt-5 border-top">
     <div class="text-center mb-5">
@@ -597,7 +700,7 @@
                       <i class="fas fa-user text-muted small"></i>
                     </div>
                   {% endif %}
-                  <a href="/user/{{ member.uid }}/year-in-review" class="text-decoration-none {{ member.uid == user_id ? 'text-dark' : 'text-primary' }} text-truncate" style="max-width: 150px;">{{ member.name }}</a>
+                  <a href="/user/{{ member.uid }}/year-in-review" class="text-decoration-none {{ member.uid == user_id ? 'text-dark' : 'text-primary' }} text-truncate" style="max-width: 150px;" target="_blank" rel="noopener">{{ member.name }}</a>
                 </div>
                 <span class="badge bg-warning text-dark rounded-pill">{{ member.count }}</span>
               </li>
@@ -624,7 +727,7 @@
                       <i class="fas fa-user text-muted small"></i>
                     </div>
                   {% endif %}
-                  <a href="/user/{{ member.uid }}/year-in-review" class="text-decoration-none {{ member.uid == user_id ? 'text-dark' : 'text-primary' }} text-truncate" style="max-width: 150px;">{{ member.name }}</a>
+                  <a href="/user/{{ member.uid }}/year-in-review" class="text-decoration-none {{ member.uid == user_id ? 'text-dark' : 'text-primary' }} text-truncate" style="max-width: 150px;" target="_blank" rel="noopener">{{ member.name }}</a>
                 </div>
                 <span class="badge bg-primary rounded-pill">{{ member.count }}</span>
               </li>
@@ -651,7 +754,7 @@
                       <i class="fas fa-user text-muted small"></i>
                     </div>
                   {% endif %}
-                  <a href="/user/{{ member.uid }}/year-in-review" class="text-decoration-none {{ member.uid == user_id ? 'text-dark' : 'text-primary' }} text-truncate" style="max-width: 150px;">{{ member.name }}</a>
+                  <a href="/user/{{ member.uid }}/year-in-review" class="text-decoration-none {{ member.uid == user_id ? 'text-dark' : 'text-primary' }} text-truncate" style="max-width: 150px;" target="_blank" rel="noopener">{{ member.name }}</a>
                 </div>
                 <span class="badge bg-success rounded-pill">{{ member.count }}</span>
               </li>
@@ -706,7 +809,7 @@
     </div>
 
     <div class="text-center mt-5 mb-5 pb-5">
-      <a href="/makerspace-dashboard/year-over-year" class="btn btn-primary btn-lg text-white">
+      <a href="/makerspace-dashboard/year-over-year" class="btn btn-primary btn-lg text-white" target="_blank" rel="noopener">
         <i class="fas fa-chart-line me-2"></i> View Full Community Dashboard
       </a>
     </div>
