@@ -729,6 +729,7 @@ class MemberStatsService {
              ];
           }
         }
+        $info['goals_matrix'] = $this->buildGoalsMatrix($profile);
 
         // Areas of Interest
         if ($profile->hasField('field_member_areas_interest') && !$profile->get('field_member_areas_interest')->isEmpty()) {
@@ -738,6 +739,7 @@ class MemberStatsService {
             }
           }
         }
+        $info['areas_of_interest_matrix'] = $this->buildAreasOfInterestMatrix($profile);
         
         // Join Date from Profile
         if ($profile->hasField('field_member_join_date') && !$profile->get('field_member_join_date')->isEmpty()) {
@@ -843,5 +845,78 @@ class MemberStatsService {
     }
 
     return $info;
+  }
+
+  /**
+   * Builds a column-based matrix of Areas of Interest terms.
+   */
+  private function buildAreasOfInterestMatrix($profile): array {
+    $selected_tids = [];
+    if ($profile && $profile->hasField('field_member_areas_interest') && !$profile->get('field_member_areas_interest')->isEmpty()) {
+      foreach ($profile->get('field_member_areas_interest') as $item) {
+        if (!empty($item->target_id)) {
+          $selected_tids[] = (int) $item->target_id;
+        }
+      }
+    }
+
+    $selected_lookup = array_fill_keys($selected_tids, TRUE);
+    $terms = $this->entityTypeManager->getStorage('taxonomy_term')->loadTree('area_of_interest');
+    if (!$terms) {
+      return [];
+    }
+
+    $columns = [];
+    $current_top_tid = NULL;
+
+    foreach ($terms as $term) {
+      if ($term->depth === 0) {
+        $current_top_tid = (int) $term->tid;
+        $columns[$current_top_tid] = [
+          'label' => $term->name,
+          'selected' => isset($selected_lookup[$current_top_tid]),
+          'terms' => [],
+        ];
+        continue;
+      }
+
+      if ($current_top_tid === NULL) {
+        continue;
+      }
+
+      $tid = (int) $term->tid;
+      $columns[$current_top_tid]['terms'][] = [
+        'label' => $term->name,
+        'selected' => isset($selected_lookup[$tid]),
+      ];
+    }
+
+    return array_values($columns);
+  }
+
+  /**
+   * Builds a display list of goals with selected state.
+   */
+  private function buildGoalsMatrix($profile): array {
+    $selected_keys = [];
+    if ($profile && $profile->hasField('field_member_goal') && !$profile->get('field_member_goal')->isEmpty()) {
+      foreach ($profile->get('field_member_goal') as $item) {
+        if (!empty($item->value)) {
+          $selected_keys[] = $item->value;
+        }
+      }
+    }
+
+    $selected_lookup = array_fill_keys($selected_keys, TRUE);
+    $goals = [];
+    foreach ($this->goalsMap as $key => $label) {
+      $goals[] = [
+        'key' => $key,
+        'label' => $label,
+        'selected' => isset($selected_lookup[$key]),
+      ];
+    }
+
+    return $goals;
   }
 }

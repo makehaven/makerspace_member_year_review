@@ -162,6 +162,15 @@ class MemberYearReviewController extends ControllerBase {
       $attached_libraries[] = 'makerspace_member_year_review/survey_form';
     }
 
+    $encouragement = $cached_data['encouragement'] ?? NULL;
+    if (empty($encouragement)) {
+      $encouragement = $this->buildEncouragementMessage(
+        $user,
+        $cached_data['stats'] ?? [],
+        $cached_data['profile'] ?? []
+      );
+    }
+
     return [
       '#theme' => 'member_year_review',
       '#user_name' => $user->getDisplayName(),
@@ -172,6 +181,7 @@ class MemberYearReviewController extends ControllerBase {
       '#photo_url' => $cached_data['profile']['photo_url'] ?? NULL,
       '#deltas' => $cached_data['deltas'],
       '#ranks' => $cached_data['ranks'],
+      '#encouragement' => $encouragement,
       '#active_members_total' => $active_members_count,
       '#community_stats' => $community_stats,
       '#community_full_report' => $community_full_report,
@@ -229,6 +239,8 @@ class MemberYearReviewController extends ControllerBase {
       'volunteer_hosted' => $this->calculateDelta($volunteer_hosted, $volunteer_hosted_prev),
     ];
 
+    $volunteer_hosted_rank = $this->statsService->getVolunteerHostedRank($user->id(), $year, $volunteer_hosted);
+
     // Ranks
     $ranks = [
       'visits' => $this->estimateRank($visit_days, 'visits'),
@@ -236,16 +248,23 @@ class MemberYearReviewController extends ControllerBase {
       'events' => $this->estimateRank($attendance['count'], 'events'),
       'loans' => $this->estimateRank($loans, 'loans'),
       'appointments' => $this->estimateRank($appointments, 'events'), 
-      'volunteer_hosted' => $this->estimateRank($volunteer_hosted, 'volunteer_hosted'),
+      'volunteer_hosted' => $this->estimateVolunteerHostedRank($volunteer_hosted_rank, $total_volunteers),
       
       'visits_num' => $this->statsService->getVisitDaysRank($user->id(), $year, $visit_days),
       'badges_num' => $this->statsService->getBadgesEarnedRank($user->id(), $year, count($badges)),
       'appointments_num' => $this->statsService->getAppointmentRank($user->id(), $year, $appointments),
-      'volunteer_hosted_num' => $this->statsService->getVolunteerHostedRank($user->id(), $year, $volunteer_hosted),
+      'volunteer_hosted_num' => $volunteer_hosted_rank,
     ];
 
     // Fun Award
     $fun_award = $this->statsService->getMakerPersona($user->id(), $year, count($badges), $attendance['count'], $loans);
+    $encouragement = $this->buildEncouragementMessage($user, [
+      'visits' => $visit_days,
+      'events_count' => $attendance['count'],
+      'badges_count' => count($badges),
+      'loans_count' => $loans,
+      'volunteer_hosted' => $volunteer_hosted,
+    ], $profile_info);
 
     return [
       'stats' => [
@@ -264,6 +283,7 @@ class MemberYearReviewController extends ControllerBase {
       'ranks' => $ranks,
       'profile' => $profile_info,
       'fun_award' => $fun_award,
+      'encouragement' => $encouragement,
     ];
   }
 
@@ -420,6 +440,16 @@ class MemberYearReviewController extends ControllerBase {
 
     if ($visitValues) {
         $chartOptions = [
+          'vAxes' => [
+            [
+              'viewWindowMode' => 'explicit',
+              'viewWindow' => [
+                'min' => 0,
+              ],
+              'baseline' => 0,
+              'minValue' => 0,
+            ],
+          ],
           'vAxis' => [
             'viewWindowMode' => 'explicit',
             'viewWindow' => [
@@ -584,6 +614,96 @@ class MemberYearReviewController extends ControllerBase {
     return [
       'label' => $label,
       'is_top' => $is_top,
+    ];
+  }
+
+  /**
+   * Helper to estimate volunteer-hosted percentile within the host pool.
+   */
+  private function estimateVolunteerHostedRank(int $rank, int $total_volunteers): ?array {
+    if ($rank <= 0 || $total_volunteers <= 0) {
+      return NULL;
+    }
+
+    $percent = (int) ceil(($rank / $total_volunteers) * 100);
+    if ($percent > 100) {
+      $percent = 100;
+    }
+
+    return [
+      'label' => 'Top ' . $percent . '%',
+      'is_top' => $percent <= 10,
+    ];
+  }
+
+  /**
+   * Selects a single encouragement message based on engagement and profile.
+   */
+  private function buildEncouragementMessage(UserInterface $user, array $stats, array $profile): ?array {
+    $visits = (int) ($stats['visits'] ?? 0);
+    $events = (int) ($stats['events_count'] ?? 0);
+    $badges = (int) ($stats['badges_count'] ?? 0);
+    $loans = (int) ($stats['loans_count'] ?? 0);
+    $volunteer_hosted = (int) ($stats['volunteer_hosted'] ?? 0);
+
+    $goals_selected = !empty($profile['goals']);
+    $interests_selected = !empty($profile['areas_of_interest']);
+
+    $low_engagement = $visits < 3 && $events < 2 && $badges < 2 && $loans < 2 && $volunteer_hosted === 0;
+    $high_engagement = $visits >= 12 || $events >= 5 || $badges >= 5 || $loans >= 5 || $volunteer_hosted >= 3;
+
+    if (!$goals_selected && !$interests_selected) {
+      return [
+        'text' => $this->t('2026 can be a great year to set a clear direction. Add a couple goals or interests so we can tailor recommendations for you.'),
+        'link_url' => '/user/member/id/' . $user->id() . '/interests-goals',
+        'link_label' => $this->t('Update goals and interests'),
+      ];
+    }
+
+    if ($low_engagement) {
+      return [
+        'text' => $this->t('We would love to see you back in the space. Build and badge classes and member show and tells are a fun way to restart and learn alongside others.'),
+        'link_url' => '/events/member',
+        'link_label' => $this->t('See member events'),
+      ];
+    }
+
+    if ($volunteer_hosted >= 3) {
+      return [
+        'text' => $this->t('Thanks for hosting appointments this year. If you want to go further, consider joining a committee and shaping what we build next.'),
+        'link_url' => '/committee-volunteer-interest',
+        'link_label' => $this->t('Join a committee'),
+      ];
+    }
+
+    if ($high_engagement) {
+      return [
+        'text' => $this->t('You had a strong year, great job. Know someone who would love MakeHaven? Invite them to join.'),
+        'link_url' => '/member-referral-program',
+        'link_label' => $this->t('Share the referral program'),
+      ];
+    }
+
+    if ($badges < 3) {
+      return [
+        'text' => $this->t('2026 is a great time to earn a few badges. Pick one or two to work toward this season.'),
+        'link_url' => '/badges',
+        'link_label' => $this->t('Browse badges'),
+      ];
+    }
+
+    if ($events < 2) {
+      return [
+        'text' => $this->t('Join a class or a show and tell to meet makers and pick up new skills.'),
+        'link_url' => '/events/member',
+        'link_label' => $this->t('See member events'),
+      ];
+    }
+
+    return [
+      'text' => $this->t('Keep exploring new tools and projects. We would love to see what you make next.'),
+      'link_url' => '/events/member',
+      'link_label' => $this->t('Find something upcoming'),
     ];
   }
 

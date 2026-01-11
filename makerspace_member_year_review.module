@@ -19,6 +19,7 @@ function makerspace_member_year_review_theme($existing, $type, $theme, $path) {
         'community_stats' => [],
         'community_full_report' => [],
         'fun_award' => NULL,
+        'encouragement' => NULL,
         'survey_form' => NULL,
         'survey_link_url' => NULL,
       ],
