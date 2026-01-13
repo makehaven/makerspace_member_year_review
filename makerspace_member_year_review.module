@@ -26,3 +26,35 @@ function makerspace_member_year_review_theme($existing, $type, $theme, $path) {
     ],
   ];
 }
+
+/**
+ * Implements hook_preprocess_page().
+ */
+function makerspace_member_year_review_preprocess_page(&$variables) {
+  // 1. Expiry check: Stop showing after February 15, 2026.
+  if (time() > strtotime('2026-02-16 00:00:00')) {
+    return;
+  }
+
+  // 2. Role check: Only for users with the 'member' role.
+  $current_user = \Drupal::currentUser();
+  if (!in_array('member', $current_user->getRoles())) {
+    return;
+  }
+
+  // 3. Tenure check: Only for users who joined before 2026 (members in 2025).
+  $account = \Drupal\user\Entity\User::load($current_user->id());
+  if ($account->getCreatedTime() >= strtotime('2026-01-01 00:00:00')) {
+    return;
+  }
+
+  // 4. Path exclusion: Don't show on access request pages (opening doors).
+  // Use request URI to catch aliases like /access-request.
+  $request_uri = \Drupal::request()->getRequestUri();
+  if (strpos($request_uri, '/access-request') === 0) {
+    return;
+  }
+
+  // Attach the popup library.
+  $variables['#attached']['library'][] = 'makerspace_member_year_review/popup';
+}

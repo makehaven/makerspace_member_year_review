@@ -3,3 +3,12 @@ survey_form:
   css:
     theme:
       css/survey-form.css: {}
+
+popup:
+  version: 1.x
+  js:
+    js/year_review_popup.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - barrio_boostrap_5_makehaven/bootstrap_cdn
