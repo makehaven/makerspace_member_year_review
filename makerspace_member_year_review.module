@@ -31,6 +31,14 @@ function makerspace_member_year_review_theme($existing, $type, $theme, $path) {
  * Implements hook_preprocess_page().
  */
 function makerspace_member_year_review_preprocess_page(&$variables) {
+  makerspace_member_year_review_attach_year_review_popup($variables);
+  makerspace_member_year_review_attach_member_survey_popup($variables);
+}
+
+/**
+ * Attaches the Year in Review popup when eligible.
+ */
+function makerspace_member_year_review_attach_year_review_popup(array &$variables) {
   // 1. Expiry check: Stop showing after February 15, 2026.
   if (time() > strtotime('2026-02-16 00:00:00')) {
     return;
@@ -57,4 +65,27 @@ function makerspace_member_year_review_preprocess_page(&$variables) {
 
   // Attach the popup library.
   $variables['#attached']['library'][] = 'makerspace_member_year_review/popup';
+}
+
+/**
+ * Attaches the 2026 member survey popup when eligible.
+ */
+function makerspace_member_year_review_attach_member_survey_popup(array &$variables) {
+  // Stop showing after Tuesday, February 24, 2026.
+  if (time() > strtotime('2026-02-25 00:00:00')) {
+    return;
+  }
+
+  $current_user = \Drupal::currentUser();
+  if (!in_array('member', $current_user->getRoles())) {
+    return;
+  }
+
+  // Do not show on access request pages used by door/tool workflows.
+  $request_uri = \Drupal::request()->getRequestUri();
+  if (strpos($request_uri, '/access-request') === 0) {
+    return;
+  }
+
+  $variables['#attached']['library'][] = 'makerspace_member_year_review/member_survey_popup';
 }

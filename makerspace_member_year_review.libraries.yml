@@ -12,3 +12,12 @@ popup:
     - core/jquery
     - core/drupal
     - barrio_boostrap_5_makehaven/bootstrap_cdn
+
+member_survey_popup:
+  version: 1.x
+  js:
+    js/member_survey_popup.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - barrio_boostrap_5_makehaven/bootstrap_cdn
