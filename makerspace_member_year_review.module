@@ -71,8 +71,8 @@ function makerspace_member_year_review_attach_year_review_popup(array &$variable
  * Attaches the 2026 member survey popup when eligible.
  */
 function makerspace_member_year_review_attach_member_survey_popup(array &$variables) {
-  // Stop showing after Tuesday, February 24, 2026.
-  if (time() > strtotime('2026-02-25 00:00:00')) {
+  // Stop showing after Thursday, March 5, 2026.
+  if (time() > strtotime('2026-03-06 00:00:00')) {
     return;
   }
 
